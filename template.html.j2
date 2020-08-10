@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>unicode.page</title>
+    <style>
+      html {
+        -webkit-text-size-adjust: none;
+        font-size: 14pt;
+      }
+      body {
+        margin: auto;
+        display: flex;
+      }
+      #toggles {
+        max-width: 14em;
+        margin: 12pt;
+        padding: 6pt;
+        font-size: 10pt;
+      }
+      #toggledetails > summary {
+        font-weight: bold;
+      }
+      .toggle, .credits {
+        margin: 8pt;
+      }
+      .togglebox {
+        transform: scale(150%);
+      }
+      main {
+        display: block;
+        max-width: 480pt;
+        padding: 4pt;
+      }
+      h1, #toggles, .desc, .scripts {
+        font-family: "Gill Sans", "Noto Sans", "Calibri", sans-serif;
+      }
+      .block {
+        margin-bottom: 16pt;
+        display: none;
+      }
+      .heading {
+        display: flex;
+        align-items: center;
+        padding: 0 9pt 0 3pt;
+      }
+      h1 {
+        font-size: 16pt;
+        flex-grow: 1;
+        margin: 8pt;
+      }
+      .scripts {
+        font-size: 8pt;
+      }
+      table {
+        border-spacing: 3pt;
+        width: 100%;
+      }
+      tr {
+        height: 32pt;
+      }
+      td {
+        padding: 0 6pt;
+      }
+      .chr {
+        font-size: 24pt;
+        text-align: center;
+        min-width: 24pt;
+        overflow: hidden;
+      }
+      .lit {
+        font-family: Menlo, Inconsolata, Consolas, monospace;
+      }
+      .esc {
+        font-size: 12pt;
+      }
+      .cp {
+        max-width: 86pt;
+        text-align: center;
+      }
+      .desc {
+        width: 80%;
+      }
+      .desc > .txt {
+        float: left;
+      }
+      .desc > .sc {
+        float: right;
+        font-size: 10pt;
+      }
+      .c2 { font-size: 76%; }
+      .c3, .c4 { font-size: 58%; }
+      .c5, .c6 { font-size: 52%; }
+      .c7, .c8 { font-size: 52%; line-height: 90%; }
+      .c9, .c10 { font-size: 32%; line-height: 90%; }
+      .d2 { font-size: 96%; }
+      .d3 { font-size: 92%; }
+      .d4 { font-size: 86%; }
+      .d5 { font-size: 80%; }
+      .d6 { font-size: 72%; }
+      .d7 { font-size: 64%; }
+      .d8 { font-size: 54%; }
+      .d9 { font-size: 42%; }
+      @media screen and (max-width: 420px) {
+        body {
+          max-width: 100%;
+          display: block;
+        }
+        #toggles {
+          max-width: inherit;
+        }
+        td {
+          padding: 0 3pt;
+        }
+        h1 {
+          font-size: 12pt;
+        }
+        .desc > .sc {
+          font-size: 8pt;
+        }
+        .c1 { font-size: 48%; }
+        .c2 { font-size: 40%; }
+        .c3, .c4 { font-size: 32%; }
+        .c5, .c6 { font-size: 24%; }
+        .c7, .c8 { font-size: 24%; line-height: 90%; }
+        .c9, .c10 { font-size: 16%; line-height: 90%; }
+        .desc {
+          max-width: 144pt;
+        }
+      }
+      @media screen {
+        body {
+          color: black;
+          background: white;
+        }
+        a:link {
+          color: #3939b8;
+        }
+        a:visited {
+          color: #932e93;
+        }
+        #toggles {
+          background: #d9d9ff;
+        }
+        .lit {
+          color: #5a5a5a;
+          background: #f4f4f4;
+        }
+        .scripts {
+          color: #777;
+        }
+      }
+      @media screen and (prefers-color-scheme: dark) {
+        body {
+          color: #b7b7b7;
+          background: black;
+        }
+        a:link {
+          color: #4f4fff;
+        }
+        a:visited {
+          color: #dc45dc;
+        }
+        #toggles {
+          background: #2a2a4f;
+        }
+        .lit {
+          color: #8a8a8a;
+          background: #1c1c1c;
+        }
+      }
+    </style>
+    <style id="block-display">
+      {% for s in scripts %}
+      .block.{{s}} { display: none; }
+      {% endfor %}
+    </style>
+  </head>
+  <body>
+    <section id="toggles">
+      <details id="toggledetails">
+        <summary>Scripts</summary>
+        <p><button onclick="resetScripts();">Clear</button></p>
+        {% for s in scripts %}
+        <p class="toggle">
+          <input class="togglebox" type="checkbox" id="{{s}}" value="{{s}}">
+          <label for="{{s}}">{{s|replace("_", " ")}}</label>
+        </p>
+        {% endfor %}
+        <p class="credits">
+          By <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
+          Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
+        </p>
+      </details>
+    </section>
+    <main>
+      {% for block, table in tables.items() %}
+      <div class="block {{block_scripts[block]|join(" ")}}">
+        <div class="heading">
+          <h1>{{block}}</h1>
+          <p class="scripts">{{block_scripts[block]|join(", ")}}</p>
+        </div>
+        <table>
+          {% for g in table %}
+          <tr>
+            <td class="chr">
+              <span{% if g.is_escape %} class="lit esc"{% endif %}>{{g.grapheme_repr}}</span>
+            </td>
+            <td class="lit cp c{{g.length}}">
+              {{g.codepoints_repr}}
+            </td>
+            <td class="desc d{{g.desc_magnitude}}">
+              <div class="txt">{{g.description}}</div>
+              {% if g.shortcodes %}
+              <div class="sc">
+                {% for sc in g.shortcodes %}
+                {# note that there is a U+2002 EN SPACE at the end of this line #}
+                <span class="lit">:{{sc}}:</span> 
+                {% endfor %}
+              </div>
+              {% endif %}
+            </td>
+            {# <td class="category">{{g.category}}</td> #}
+          </tr>
+          {% endfor %}
+        </table>
+      </div>
+      {% endfor %}
+    </main>
+    <script>
+      let _forEach = Array.prototype.forEach;
+      let _find = Array.prototype.find;
+      let rules = document.getElementById('block-display').sheet.rules;
+      let boxes = document.getElementsByClassName('togglebox');
+
+      let findRule = (s) => _find.call(rules, (r) => {
+        return r.selectorText == ".block." + s;
+      });
+
+      let update = (b) => {
+        let r = findRule(b.value);
+        if (r) {
+          r.style.display = b.checked ? "block" : "none";
+        }
+      };
+
+      _forEach.call(boxes, b => {
+        update(b);
+        b.addEventListener('change', e => update(b));
+      });
+
+      if (!_find.call(boxes, b => b.checked)) {
+        boxes[0].click();
+      }
+
+      if (getComputedStyle(document.body).display == "flex") {
+        document.getElementById("toggledetails").open = true;
+      }
+
+      function resetScripts() {
+        _forEach.call(boxes, b => {
+          b.checked = false;
+          update(b);
+        });
+      }
+    </script>
+  </body>
+</html>
