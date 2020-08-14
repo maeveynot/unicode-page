@@ -198,10 +198,10 @@
     </section>
     <main>
       {% for block, table in tables.items() %}
-      <div class="block {{block_scripts[block]|join(" ")}}">
+      <div class="block {{block_scripts[block]|sort|join(" ")}}">
         <div class="heading">
           <h1>{{block}}</h1>
-          <p class="scripts">{{block_scripts[block]|join(", ")}}</p>
+          <p class="scripts">{{block_scripts[block]|sort|join(", ")}}</p>
         </div>
         <table>
           {% for g in table %}
