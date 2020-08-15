@@ -207,7 +207,11 @@
           {% for g in table %}
           <tr>
             <td class="chr">
-              <span{% if g.is_escape %} class="lit esc"{% endif %}>{{g.grapheme_repr}}</span>
+              {% if g.is_escape %}
+              <span class="lit esc">{{g.grapheme_repr}}</span>
+              {% else %}
+              {{g.grapheme_repr}}
+              {% endif %}
             </td>
             <td class="lit cp c{{g.length}}">
               {{g.codepoints_repr}}
