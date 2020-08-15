@@ -264,7 +264,7 @@ class UnicodePageData:
                 "desc_magnitude": min(9, int(math.sqrt(len(desc)))),
                 "codepoints_repr": " ".join(f"U+{ord(c):04X}" for c in grapheme),
                 "shortcodes": self.shortcodes[grapheme],
-                # "category": self.categories.get(grapheme, "Xx"),
+                "category": self.categories.get(grapheme, "Xx"),
             }
             tables[b].append(row)
             # seen_blocks.add(b)
