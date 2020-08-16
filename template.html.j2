@@ -39,7 +39,6 @@
       }
       .block {
         margin-bottom: 16pt;
-        display: none;
       }
       .heading {
         display: flex;
@@ -175,17 +174,12 @@
         }
       }
     </style>
-    <style id="block-display">
-      {% for s in scripts %}
-      .block.{{s}} { display: none; }
-      {% endfor %}
-    </style>
   </head>
   <body>
     <section id="toggles">
       <details id="script-toggles">
         <summary id="script-toggles-head">Scripts</summary>
-        <p><button onclick="resetScripts();">Clear</button></p>
+        <p><button id="clear">Clear</button></p>
         {% for s in scripts %}
         <p class="toggle">
           <input class="togglebox" type="checkbox" id="{{s}}" value="{{s}}">
@@ -200,7 +194,8 @@
     </section>
     <main>
       {% for block, table in tables.items() %}
-      <div class="block {{block_scripts[block]|sort|join(" ")}}">
+      <div class="block {{block_scripts[block]|sort|join(" ")}}"
+           style="display: {% if loop.first %}block{% else %}none{% endif %}">
         <div class="heading">
           <h1>{{block}}</h1>
           <p class="scr">{{block_scripts[block]|sort|join(", ")}}</p>
@@ -237,41 +232,41 @@
       {% endfor %}
     </main>
     <script>
-      let _forEach = Array.prototype.forEach;
-      let _find = Array.prototype.find;
-      let rules = document.getElementById('block-display').sheet.rules;
-      let boxes = document.getElementsByClassName('togglebox');
-
-      let findRule = (s) => _find.call(rules, (r) => {
-        return r.selectorText == ".block." + s;
-      });
-
-      let update = (b) => {
-        let r = findRule(b.value);
-        if (r) {
-          r.style.display = b.checked ? "block" : "none";
-        }
-      };
-
-      _forEach.call(boxes, b => {
-        update(b);
-        b.addEventListener('change', e => update(b));
-      });
-
-      if (!_find.call(boxes, b => b.checked)) {
-        boxes[0].click();
-      }
-
-      if (getComputedStyle(document.body).display == "flex") {
+      if (getComputedStyle(document.body).display == "flex")
         document.getElementById("script-toggles").open = true;
-      }
 
-      function resetScripts() {
-        _forEach.call(boxes, b => {
-          b.checked = false;
-          update(b);
+      requestAnimationFrame(t => {
+        const boxes = document.getElementsByClassName('togglebox');
+        const visible = new Set();
+        Array.prototype.forEach.call(boxes, box => {
+          box.addEventListener("change", e => {
+            visible.clear();
+            Array.prototype.forEach.call(boxes, box => {
+              if (box.checked) {
+                document.querySelectorAll(".block." + box.value).forEach(div => {
+                  visible.add(div);
+                });
+              }
+            });
+            document.querySelectorAll(".block").forEach(div => {
+              const display = visible.has(div) ? "block" : "none";
+              div.style.display = display;
+            });
+          });
         });
-      }
+
+        if (!Array.prototype.find.call(boxes, box => box.checked))
+          boxes[0].click();
+
+        document.getElementById("clear").addEventListener("click", e => {
+          Array.prototype.forEach.call(boxes, box => {
+            box.checked = false;
+          });
+          document.querySelectorAll(".block").forEach(div => {
+            div.style.display = "none";
+          });
+        });
+      });
     </script>
   </body>
 </html>
