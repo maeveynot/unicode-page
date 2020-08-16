@@ -21,21 +21,20 @@
         padding: 6pt;
         font-size: 10pt;
       }
-      #toggledetails > summary {
+      #script-toggles-head {
         font-weight: bold;
       }
-      .toggle, .credits {
+      .toggle, #credits {
         margin: 8pt;
       }
       .togglebox {
         transform: scale(150%);
       }
       main {
-        display: block;
         max-width: 480pt;
         padding: 4pt;
       }
-      h1, #toggles, .desc, .scripts {
+      h1, #toggles, .desc, .scr {
         font-family: "Gill Sans", "Noto Sans", "Calibri", sans-serif;
       }
       .block {
@@ -52,7 +51,7 @@
         flex-grow: 1;
         margin: 8pt;
       }
-      .scripts {
+      .scr {
         font-size: 8pt;
       }
       table {
@@ -87,10 +86,10 @@
       .desc {
         width: 80%;
       }
-      .desc > .txt {
+      .txt {
         float: left;
       }
-      .desc > .sc {
+      .sc {
         float: right;
         font-size: 10pt;
       }
@@ -121,7 +120,7 @@
         h1 {
           font-size: 12pt;
         }
-        .desc > .sc {
+        .sc {
           font-size: 8pt;
         }
         .c1 { font-size: 48%; }
@@ -152,7 +151,7 @@
           color: #5a5a5a;
           background: #f4f4f4;
         }
-        .scripts {
+        .scr {
           color: #777;
         }
       }
@@ -184,8 +183,8 @@
   </head>
   <body>
     <section id="toggles">
-      <details id="toggledetails">
-        <summary>Scripts</summary>
+      <details id="script-toggles">
+        <summary id="script-toggles-head">Scripts</summary>
         <p><button onclick="resetScripts();">Clear</button></p>
         {% for s in scripts %}
         <p class="toggle">
@@ -193,7 +192,7 @@
           <label for="{{s}}">{{s|replace("_", " ")}}</label>
         </p>
         {% endfor %}
-        <p class="credits">
+        <p id="credits">
           By <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
           Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
         </p>
@@ -204,7 +203,7 @@
       <div class="block {{block_scripts[block]|sort|join(" ")}}">
         <div class="heading">
           <h1>{{block}}</h1>
-          <p class="scripts">{{block_scripts[block]|sort|join(", ")}}</p>
+          <p class="scr">{{block_scripts[block]|sort|join(", ")}}</p>
         </div>
         <table>
           {% for g in table %}
@@ -264,7 +263,7 @@
       }
 
       if (getComputedStyle(document.body).display == "flex") {
-        document.getElementById("toggledetails").open = true;
+        document.getElementById("script-toggles").open = true;
       }
 
       function resetScripts() {
