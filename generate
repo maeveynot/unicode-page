@@ -13,90 +13,49 @@ from itertools import chain, groupby
 from urllib.parse import urlparse
 
 
-# Some subjective names that sound like block names. The weird-looking keys
-# here are the strings they're labeled as in the data. Normal block names do
-# not have underscores. I'm considering changing "Emoji sequences" to just
-# "Emoji" because it's not really relevant to most users that they are
-# implemented as sequences.
+# The weird-looking keys here are the strings emoji are labeled with in the
+# data in lieu of block names. Let's display something friendlier to users.
+# RGI_Emoji_Tag_Sequence is currently only used for flags (see TR51, Annex
+# C) but this might change in future versions so update here if it does.
 EMOJI_PSEUDO_BLOCKS = {
     "Basic_Emoji": "Basic Emoji",
     "Emoji_Keycap_Sequence": "Keycaps",
     "RGI_Emoji_Flag_Sequence": "Flags",
-    "RGI_Emoji_Modifier_Sequence": "Emoji sequences",
-    "RGI_Emoji_Tag_Sequence": "Emoji sequences",
-    "RGI_Emoji_ZWJ_Sequence": "Emoji sequences",
+    "RGI_Emoji_Modifier_Sequence": "Emoji",
+    "RGI_Emoji_Tag_Sequence": "Flags",
+    "RGI_Emoji_ZWJ_Sequence": "Emoji",
 }
 
 
-def friendly_block_name(block):
-    # almost all calls here will be non-emoji blocks and not be found
-    # in the above mapping, so default to the name itself
-    block = EMOJI_PSEUDO_BLOCKS.get(block, block)
-    # clean this up while we're here
-    block = re.sub(r"\b(symbol|mark)\b", lambda m: m[0] + "s", block)
-    return block
-
-
-# Since emoji search is the most common use case, we will put these fake
-# scripts near the top of the list. These aren't keys that we can look up; we
-# have to iterate through them to check for a (case-insensitive, hence
-# lowercase) substring match.
-EMOJI_PSEUDO_SCRIPTS = {
-    "emoji": "Emoji",
-    "keycaps": "Emoji",
-    "flags": "Flags",
-}
-
-
-def friendly_script_name(block):
-    if block:
-        for substr, pseudo_script in EMOJI_PSEUDO_SCRIPTS.items():
-            if substr in block.lower():
-                return pseudo_script
-    return None
-
-
-# There might be more edge cases here
-def is_flag(desc):
-    return re.search(r"^Flag:|Flag$", desc) and not "Mailbox" in desc
-
-
-# I'm making the perhaps somewhat controversial decision to have the
-# descriptions NOT ALL BE YELLING LIKE THIS. This means we need some
-# heuristics for correct title case. This currently fumbles some instances
-# where a word in the description is an initialism like "WC"; usually, these
-# are the terminal word so I suppose we could check that, but I'd want to go
-# through all of them to be sure it looks right.
+# I'm making the perhaps controversial decision to have the descriptions
+# NOT ALL BE YELLING LIKE THIS. This means we need some heuristics for
+# correct title case. They currently fumble some instances where a word in
+# the description is an initialism like "WC"; usually, these are the first
+# or last word so I suppose we could check that, but I'd want to go through
+# all of them to be sure it looks right.
 #
 # This does mean that if you want to copy a name to refer to it in a plain
-# text message for U+R0FL COMEDIC EFFECT, you're going to have to tr or gUU or
-# C-x C-u or whatever it yourself. This could perhaps be redressed by passing
-# the buck to CSS, but that would require adding markup to handle these edge
-# cases and increase page size for something most users do not care about.
-
-
-def fixup_desc(desc):
-    return " ".join(fixup_word(word) for word in desc.split())
-
-
-# not exhaustive
-ALWAYS_UPPERCASE_WORDS = ["cjk"]
-ALWAYS_LOWERCASE_WORDS = ["to", "of", "and", "with"]
-
-
-def fixup_word(word):
+# text message for U+R0FL COMEDIC EFFECT, you're going to have to tr or gUU
+# or C-x C-u or whatever it yourself. This could perhaps be redressed by
+# passing the buck to CSS, but that would require adding markup to handle
+# these edge cases and increase page size for something most users do not
+# care about.
+def fixup_word(w):
+    # not exhaustive
+    ALWAYS_UPPERCASE_WORDS = ["cjk"]
+    ALWAYS_LOWERCASE_WORDS = ["to", "of", "and", "with"]
+    if w.lower() in ALWAYS_UPPERCASE_WORDS:
+        return w.upper()
+    if w.lower() in ALWAYS_LOWERCASE_WORDS:
+        return w.lower()
     # this syntax is allowed but only actually used once, for #️
-    word = re.sub(r"\\x{([0-9A-Za-z]+)}", lambda m: chr(int(m[1], 16)), word)
-    if word.lower() in ALWAYS_UPPERCASE_WORDS:
-        return word.upper()
-    if word.lower() in ALWAYS_LOWERCASE_WORDS:
-        return word.lower()
-    return word.title()
+    w = re.sub(r"\\x{([0-9A-Za-z]+)}", lambda m: chr(int(m[1], 16)), w)
+    return w.title()
 
 
-# This is maybe not the most absolutely correct way to parse every UCD file,
-# but it works well enough, and I have to assume that *they* assume people are
-# going to do it.
+# This is maybe not the most absolutely correct way to parse every UCD file
+# (it's... hard to say, looking at the docs), but it works well enough, and
+# I have to assume that *they* assume people are going to do it.
 def text_fields(path, sep=";", comment_chr="#"):
     with open(path) as f:
         for line in f:
@@ -113,17 +72,32 @@ def json_dict(path):
 
 
 # The GitHub shortcode data URIs (in our JSON) exclude any ZWJ or VS16 code
-# points. Note that this produces a string that isn't a valid sequence of code
-# points, rather than the longer ASCII representation used in the URIs, but
-# we're only using it to index a dict lookup so who really cares.
+# points. Note that this produces a string that isn't a valid sequence of
+# code points, rather than the longer ASCII representation used in the URIs,
+# but we're only using it to index a dict lookup so who really cares.
 def github_abbrev(grapheme):
     return "".join(c for c in grapheme if c != "\ufe0f" and c != "\u200d")
 
 
-# BMP and SMP only
-MAX_PLANE = 1
+# BMP and SMP only for now.
+def higher_plane(codepoint):
+    return (codepoint >> 16) > 1
 
-# Things we can't reasonably display
+
+# Official looking hex.
+def cp_repr(g):
+    return " ".join(f"U+{ord(c):04X}" for c in g)
+
+
+# Things that appear (as single code points) in the blocks list that we don't
+# want to load at all.
+IGNORE_UNARY_BLOCKS = [
+    "<reserved>",
+    "<not a character>",
+]
+
+# Kinds of code points we can't reasonably display. Would be nice if we
+# could skip these at load time; currently this isn't used until render.
 IGNORE_CATEGORIES = [
     "Mc",  # combining
     "Cs",  # surrogate
@@ -132,142 +106,187 @@ IGNORE_CATEGORIES = [
 ]
 
 
+class Block:
+    def __init__(self, name):
+        self.name = name
+        self.graphemes = []
+
+
+class Grapheme:
+    def __init__(self, description, category=None, script=None):
+        self.description = " ".join(fixup_word(w) for w in description.split())
+        self.category = category
+        self.script = script
+
+
+class Table:
+    def __init__(self, block):
+        self.block = block
+        self.scripts = set()
+        self.rows = []
+
+
 class UnicodePageData:
     def __init__(self):
-        self.descriptions = {}
-        self.github_emoji = {}
+        self.blocks = []
+        self.graphemes = {}
+        self.github_abbrevs = {}
         self.shortcodes = defaultdict(list)
-        self.categories = {}
-        self.blocks = {}
-        self.scripts = {}
-        # since there is no OrderedSet, this is a dict where we only ever set values to True.
-        # Prepopulate so that our fake ones are inserted before Latin.
-        self.all_scripts = {
-            "Common": True,
-            "Emoji": True,
-            "Flags": True,
-        }
 
-    def load_names_list(self, path):
+        self.load_blocks("NamesList.txt")
+        self.load_unicode_data("UnicodeData.txt")
+        self.load_emoji("emoji-sequences.txt", "emoji-zwj-sequences.txt")
+        self.load_scripts("Scripts.txt")
+        self.load_github_shortcodes("github-shortcodes.json")
+
+        # this check is obviously slow, but if something didn't end up in a block
+        # it won't be rendered, which is important
+        if "DEBUG" in os.environ:
+            print(f"debug: checking for orphans...", file=sys.stderr)
+            for g in self.graphemes.keys():
+                if not any(g in b.graphemes for b in self.blocks):
+                    print(f"warning: orphaned: {cp_repr(g)}", file=sys.stderr)
+
+    def load_blocks(self, path):
+        cur_block_name = None
         cur_block = None
         for fields in text_fields(path, "\t"):
+            if len(fields) <= 1 or fields[1] in IGNORE_UNARY_BLOCKS:
+                continue
             if fields[0] == "@":
-                cur_block = fields[2]
+                if fields[2] != cur_block_name:
+                    cur_block_name = fields[2]
+                    cur_block = Block(cur_block_name)
+                    self.blocks.append(cur_block)
             elif re.match(r"[0-9A-Fa-f]+\b", fields[0]):
                 try:
-                    grapheme = chr(int(fields[0], 16))
+                    codepoint = int(fields[0], 16)
+                    if higher_plane(codepoint):
+                        continue
+                    g = chr(codepoint)
+                    cur_block.graphemes.append(g)
                 except:
-                    print(repr(fields), file=sys.stderr)
+                    print("error parsing", repr(fields), file=sys.stderr)
                     sys.exit(1)
-                self.blocks[grapheme] = friendly_block_name(cur_block) or "Unknown block"
 
-    def load_scripts(self, path):
-        for fields in text_fields(path):
-            codepoints = [int(i, 16) for i in re.split(r"\.\.|\s+", fields[0])]
-            s = fields[1]
-            if len(codepoints) == 1:
-                grapheme = chr(codepoints[0])
-                self.scripts[grapheme] = friendly_script_name(self.blocks.get(grapheme)) or s
-            elif len(codepoints) == 2:
-                for c in range(codepoints[0], codepoints[1] + 1):
-                    grapheme = chr(c)
-                    self.scripts[grapheme] = friendly_script_name(self.blocks.get(grapheme)) or s
-            else:
-                if "DEBUG" in os.environ:
-                    print(f"ignoring codepoint range {codepoints}", file=sys.stderr)
-
+    # umm, actually this might be completely redundant with nameslist...
     def load_unicode_data(self, path):
         for fields in text_fields(path):
             codepoint = int(fields[0], 16)
-            plane = codepoint >> 16
-            if plane > MAX_PLANE:
+            category = fields[2]
+            description = fields[1]
+            if higher_plane(codepoint):
                 continue
-            cat = fields[2]
-            if cat in IGNORE_CATEGORIES:
+            if description == "<control>":
+                description = fields[10]
+            # maybe we should keep track of these ranges for debug purposes later
+            if description.endswith(", First>") or description.endswith(", Last>"):
                 continue
-            desc = fields[1]
-            # not really sure how these work but the obsolete names are what we want for C0
-            # controls
-            if desc == "<control>":
-                desc = fields[10]
-            grapheme = chr(codepoint)
-            self.categories[grapheme] = cat
-            self.descriptions[grapheme] = fixup_desc(desc)
-            self.github_emoji[github_abbrev(grapheme)] = grapheme
-            # we want this to be in the order we encountered them in *this* file. could be .add()
-            # instead of [] = True if we implemented an ordered set
-            self.all_scripts[self.scripts.get(grapheme)] = True
+            g = chr(codepoint)
+            self.graphemes[g] = Grapheme(description, category)
+            self.github_abbrevs[github_abbrev(g)] = g
 
     def load_emoji(self, *paths):
+        cur_block_name = None
+        cur_block = None
         for fields in chain(*[text_fields(path) for path in paths]):
+            b = EMOJI_PSEUDO_BLOCKS.get(fields[1], "Emoji")
+            if b != cur_block_name:
+                cur_block_name = b
+                cur_block = Block(cur_block_name)
+                self.blocks.append(cur_block)
             if ".." in fields[0]:
+                # a run of basic emoji; we already have these loaded with description and
+                # category (fields[1] only contains an informal name of the first emoji)
                 start, end = (int(i, 16) for i in fields[0].split("..", 1))
-                emoji = (chr(i) for i in range(start, end + 1))
+                emoji = [chr(i) for i in range(start, end + 1)]
             else:
-                emoji = ("".join(chr(int(i, 16)) for i in fields[0].split()),)
-            desc = fixup_desc(fields[2])
-            for grapheme in emoji:
-                if is_flag(desc):
-                    b = "Flags"
+                # a sequence; this isn't loaded yet, and the description field is usable
+                g = "".join(chr(int(i, 16)) for i in fields[0].split())
+                # the category here is actually in the comment, but we've stripped comments
+                self.graphemes[g] = Grapheme(fields[2], "So")
+                emoji = [g]
+            for g in emoji:
+                cur_block.graphemes.append(g)
+                self.graphemes[g].script = "Emoji"
+                self.github_abbrevs[github_abbrev(g)] = g
+
+    def load_scripts(self, path):
+        for fields in text_fields(path):
+            if ".." in fields[0]:
+                start, end = [int(i, 16) for i in fields[0].split("..", 1)]
+                codepoints = range(start, end + 1)
+            else:
+                codepoints = [int(i, 16) for i in fields[0].split()]
+            for codepoint in codepoints:
+                if higher_plane(codepoint):
+                    continue
+                g = chr(codepoint)
+                if g in self.graphemes:
+                    self.graphemes[g].script = fields[1]
                 else:
-                    b = friendly_block_name(fields[1])
-                if grapheme not in self.scripts:
-                    # probably a flag
-                    s = friendly_script_name(b) or "Unknown script"
-                    self.descriptions[grapheme] = desc
-                    self.scripts[grapheme] = s
-                    self.all_scripts[s] = True
-                self.blocks[grapheme] = b
-                self.github_emoji[github_abbrev(grapheme)] = grapheme
+                    g = None
+                    break
+            # this happens for the <foo, First>..<foo, Last> ranges
+            if g is None and "DEBUG" in os.environ:
+                print(f"debug: ignoring {fields[0]} for script {fields[1]}", file=sys.stderr)
 
     def load_github_shortcodes(self, path):
         for shortcode, url in json_dict(path).items():
             filename = urlparse(url).path.split("/")[-1]
             basename, dot, extension = filename.rpartition(".")
             try:
-                # hold up, these are illegal sequences, don't say "grapheme"
-                grapheme = "".join(chr(int(i, 16)) for i in basename.split("-"))
-                if grapheme in self.github_emoji:
-                    self.shortcodes[self.github_emoji[grapheme]].append(shortcode)
+                a = "".join(chr(int(i, 16)) for i in basename.split("-"))
+                if a in self.github_abbrevs:
+                    self.shortcodes[self.github_abbrevs[a]].append(shortcode)
             except ValueError:
-                # set for verbosity about these, some of which are quite embarassing
+                # some of these are quite embarassing
                 if "DEBUG" in os.environ:
-                    print(f"ignoring GitHub custom emoji :{basename}:", file=sys.stderr)
+                    print(f"debug: ignoring GitHub :{basename}:", file=sys.stderr)
 
-    # Once upon a time there was plain text output here too... bring it back someday.
-
+    # once upon a time there was plain text output here too... bring it back someday.
     def render_html(self, template_path):
-        tables = defaultdict(list)
-        block_scripts = defaultdict(set)
-        # seen_blocks = set()
-        for grapheme, desc in self.descriptions.items():
-            escape = None
-            if len(grapheme) == 1 and ord(grapheme) < 0xFF:
-                a = ord(grapheme)
-                if a < 0x20:
-                    escape = "^" + chr(a | 0x40)
-                if a == 0x7F:
-                    escape = "^?"
-                if a > 0x7F and a < 0xA0:
-                    escape = ""
-            b = self.blocks.get(grapheme, "Unknown block")
-            s = self.scripts.get(grapheme, "Unknown script")
-            truncate_output = "IMPERIALIST_LEXICOGRAPHIC_CHAUVINISM" in os.environ
-            if truncate_output and s not in ("Common", "Emoji", "Latin", "Unknown script"):
-                continue
-            block_scripts[b].add(s)
-            row = {
-                "grapheme_repr": escape or grapheme,
-                "length": len(grapheme),
-                "is_escape": bool(escape),
-                "description": desc,
-                "desc_magnitude": min(9, int(math.sqrt(len(desc)))),
-                "codepoints_repr": " ".join(f"U+{ord(c):04X}" for c in grapheme),
-                "shortcodes": self.shortcodes[grapheme],
-                "category": self.categories.get(grapheme, "Xx"),
-            }
-            tables[b].append(row)
-            # seen_blocks.add(b)
+        tables = []
+        # since there is no OrderedSet, this is a dict where we only ever set
+        # values to True; prepopulate so that our fake "Emoji" script is first
+        scripts = {
+            "Common": True,
+            "Emoji": True,
+        }
+        for b in self.blocks:
+            t = Table(b)
+            for g in b.graphemes:
+                info = self.graphemes.get(g)
+                if not info:
+                    print(f"warning: no grapheme for {cp_repr(g)}", file=sys.stderr)
+                    continue
+                if info.category in IGNORE_CATEGORIES:
+                    continue
+                if "IMPERIALIST_LEXICOGRAPHIC_CHAUVINISM" in os.environ and info.script not in ("Common", "Emoji", "Latin"):
+                    continue
+                escape = None
+                if len(g) == 1 and ord(g) < 0xFF:
+                    n = ord(g)
+                    if n < 0x20:
+                        escape = "^" + chr(n | 0x40)
+                    if n == 0x7F:
+                        escape = "^?"
+                    if n > 0x7F and n < 0xA0:
+                        escape = ""
+                row = {
+                    "grapheme_repr": escape or g,
+                    "length": len(g),
+                    "is_escape": bool(escape),
+                    "description": info.description,
+                    "desc_magnitude": min(9, int(math.sqrt(len(info.description)))),
+                    "codepoints_repr": cp_repr(g),
+                    "shortcodes": self.shortcodes[g],
+                    "category": info.category,
+                }
+                t.rows.append(row)
+                t.scripts.add(info.script)
+                scripts[info.script] = True
+            tables.append(t)
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader("."),
@@ -276,18 +295,9 @@ class UnicodePageData:
             trim_blocks=True,
             lstrip_blocks=True,
         )
-        return env.get_template(template_path).render(
-            tables=tables, scripts=self.all_scripts.keys(), block_scripts=block_scripts,
-        )
+        return env.get_template(template_path).render(tables=tables, scripts=scripts)
 
 
 if __name__ == "__main__":
     data = UnicodePageData()
-
-    data.load_names_list("NamesList.txt")
-    data.load_scripts("Scripts.txt")
-    data.load_unicode_data("UnicodeData.txt")
-    data.load_emoji("emoji-sequences.txt", "emoji-zwj-sequences.txt")
-    data.load_github_shortcodes("github-shortcodes.json")
-
     print(data.render_html(sys.argv[1]))

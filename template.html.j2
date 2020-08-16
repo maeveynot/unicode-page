@@ -193,38 +193,38 @@
       </details>
     </section>
     <main>
-      {% for block, table in tables.items() %}
-      <div class="block {{block_scripts[block]|sort|join(" ")}}"
+      {% for t in tables %}
+      <div class="block {{t.scripts|sort|join(" ")}}"
            style="display: {% if loop.first %}block{% else %}none{% endif %}">
         <div class="heading">
-          <h1>{{block}}</h1>
-          <p class="scr">{{block_scripts[block]|sort|join(", ")}}</p>
+          <h1>{{t.block.name}}</h1>
+          <p class="scr">{{t.scripts|sort|join(", ")}}</p>
         </div>
         <table>
-          {% for g in table %}
+          {% for r in t.rows %}
           <tr>
-            <td class="chr {{g.category}}">
-              {% if g.is_escape %}
-              <span class="lit esc">{{g.grapheme_repr}}</span>
+            <td class="chr {{r.category}}">
+              {% if r.is_escape %}
+              <span class="lit esc">{{r.grapheme_repr}}</span>
               {% else %}
-              {{g.grapheme_repr}}
+              {{r.grapheme_repr}}
               {% endif %}
             </td>
-            <td class="lit cp c{{g.length}}">
-              {{g.codepoints_repr}}
+            <td class="lit cp c{{r.length}}">
+              {{r.codepoints_repr}}
             </td>
-            <td class="desc d{{g.desc_magnitude}}">
-              <div class="txt">{{g.description}}</div>
-              {% if g.shortcodes %}
+            <td class="desc d{{r.desc_magnitude}}">
+              <div class="txt">{{r.description}}</div>
+              {% if r.shortcodes %}
               <div class="sc">
-                {% for sc in g.shortcodes %}
+                {% for sc in r.shortcodes %}
                 {# note that there is a U+2002 EN SPACE at the end of this line #}
                 <span class="lit">:{{sc}}:</span> 
                 {% endfor %}
               </div>
               {% endif %}
             </td>
-            {# <td class="category">{{g.category}}</td> #}
+            {# <td class="category">{{r.category}}</td> #}
           </tr>
           {% endfor %}
         </table>
