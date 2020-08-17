@@ -233,40 +233,45 @@
       {% endfor %}
     </main>
     <script>
-      if (getComputedStyle(document.body).display == "flex")
+      const boxes = Array.prototype.slice.call(document.getElementsByClassName('togglebox'));
+
+      const clearVisibility = () => {
+        boxes.forEach(b => {
+          b.checked = false;
+        });
+        document.querySelectorAll(".block").forEach(div => {
+          div.style.display = "none";
+        });
+      };
+
+      const updateVisibility = () => {
+        const visible = new Set();
+        boxes.forEach(b => {
+          if (b.checked) {
+            document.querySelectorAll(".block." + b.value).forEach(div => {
+              visible.add(div);
+            });
+          }
+        });
+        document.querySelectorAll(".block").forEach(div => {
+          div.style.display = visible.has(div) ? "block" : "none";
+        });
+      };
+
+      document.getElementById("clear").addEventListener("click", e => clearVisibility());
+      boxes.forEach(b => {
+        b.addEventListener("change", e => updateVisibility());
+      });
+
+      if (getComputedStyle(document.body).display == "flex") {
         document.getElementById("script-toggles").open = true;
+      }
 
       requestAnimationFrame(t => {
-        const boxes = document.getElementsByClassName('togglebox');
-        const visible = new Set();
-        Array.prototype.forEach.call(boxes, box => {
-          box.addEventListener("change", e => {
-            visible.clear();
-            Array.prototype.forEach.call(boxes, box => {
-              if (box.checked) {
-                document.querySelectorAll(".block." + box.value).forEach(div => {
-                  visible.add(div);
-                });
-              }
-            });
-            document.querySelectorAll(".block").forEach(div => {
-              const display = visible.has(div) ? "block" : "none";
-              div.style.display = display;
-            });
-          });
-        });
-
-        if (!Array.prototype.find.call(boxes, box => box.checked))
-          boxes[0].click();
-
-        document.getElementById("clear").addEventListener("click", e => {
-          Array.prototype.forEach.call(boxes, box => {
-            box.checked = false;
-          });
-          document.querySelectorAll(".block").forEach(div => {
-            div.style.display = "none";
-          });
-        });
+        if (!boxes.find(b => b.checked)) {
+          boxes[0].checked = true;
+        }
+        updateVisibility();
       });
     </script>
   </body>
