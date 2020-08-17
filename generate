@@ -159,29 +159,26 @@ class UnicodePageData:
                     print(f"warning: orphaned: {cp_repr(g)}", file=sys.stderr)
 
     def load_blocks(self, path):
-        cur_block_name = None
-        cur_block = None
+        name = None
+        block = None
         for fields in text_fields(path, "\t"):
             if len(fields) <= 1 or fields[1] in IGNORE_UNARY_BLOCKS:
                 continue
-            if fields[0] == "@":
-                if fields[2] != cur_block_name:
-                    if cur_block and cur_block.graphemes:
-                        self.blocks.append(cur_block)
-                    cur_block_name = fields[2]
-                    cur_block = Block(cur_block_name)
+            if fields[0] == "@" and fields[2] != name:
+                name = fields[2]
+                block = None
             elif re.match(r"[0-9A-Fa-f]+\b", fields[0]):
                 try:
                     codepoint = int(fields[0], 16)
                     if higher_plane(codepoint):
                         continue
-                    g = chr(codepoint)
-                    cur_block.graphemes.append(g)
+                    if not block:
+                        block = Block(name)
+                        self.blocks.append(block)
+                    block.graphemes.append(chr(codepoint))
                 except:
                     print("error parsing", repr(fields), file=sys.stderr)
                     sys.exit(1)
-        if cur_block and cur_block.graphemes:
-            self.blocks.append(cur_block)
 
     # umm, actually this might be completely redundant with nameslist...
     def load_unicode_data(self, path):
