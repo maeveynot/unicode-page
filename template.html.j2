@@ -183,8 +183,8 @@
         <p><button id="clear">Clear</button></p>
         {% for s in scripts %}
         <p class="toggle">
-          <input class="togglebox" type="checkbox" id="{{s}}" value="{{s}}">
-          <label for="{{s}}">{{s|replace("_", " ")}}</label>
+          <input class="togglebox" type="checkbox" id="{{s|dom_id}}" value="{{s|dom_id}}">
+          <label for="{{s|dom_id}}">{{s}}</label>
         </p>
         {% endfor %}
         <p id="credits">
@@ -200,16 +200,16 @@
     </script>
     <main>
       {% for t in tables %}
-      <div class="block {{t.scripts|sort|join(" ")}}"
+      <div class="block {{t.scripts|sort|map('dom_id')|join(" ")}}"
            style="display: {% if loop.index < 32 %}block{% else %}none{% endif %}">
         <div class="heading">
           <h1>{{t.block_name}}</h1>
-          <p class="scr">{{t.scripts|sort|join(", ")|replace("_", " ")}}</p>
+          <p class="scr">{{t.scripts|sort|join(", ")}}</p>
         </div>
         <table>
           {% for r in t.rows %}
           <tr>
-            <td class="chr {{r.category}}">
+            <td class="chr {{r.category|dom_id}}">
               {% if r.is_escape %}
               <span class="lit esc">{{r.grapheme_repr}}</span>
               {% else %}

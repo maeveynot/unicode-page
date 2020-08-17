@@ -189,7 +189,7 @@ class UnicodePageData:
                     continue
                 g = chr(codepoint)
                 if g in self.graphemes:
-                    self.graphemes[g].script = fields[1]
+                    self.graphemes[g].script = fields[1].replace("_", " ")
                 else:
                     g = None
                     break
@@ -302,6 +302,8 @@ class UnicodePageData:
             trim_blocks=True,
             lstrip_blocks=True,
         )
+        # make a valid DOM identifier out of arbitrary strings we've loaded here
+        env.filters["dom_id"] = lambda s: re.sub(r"^[0-9]+|[^A-Za-z0-9_-]+", "", s)
         return env.get_template(template_path).render(tables=tables, scripts=scripts)
 
 
