@@ -210,12 +210,12 @@ class UnicodePageData:
                 # this is a sequence; we haven't loaded any of these yet
                 codepoints = [int(i, 16) for i in fields[0].split()]
                 g = "".join(chr(c) for c in codepoints)
-                # find/create a fake "(emoji)" block corresponding to the first codepoint's block
+                # find/create a fake block corresponding to the first codepoint's block
                 if len(codepoints) > 1:
                     root = chr(codepoints[0])
                     # TODO: if root's fake script is "Emoji", insert into its real block instead
                     if root in self.graphemes:
-                        name = f"{self.graphemes[root].block_name} (emoji)"
+                        name = f"{self.graphemes[root].block_name}"
                 else:
                     print(f"warning: unknown emoji {cp_repr(g)}", file=sys.stderr)
                     name = "Unknown emoji"
