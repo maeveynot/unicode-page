@@ -291,6 +291,11 @@ class UnicodePageData:
                 t.scripts.add(info.script)
                 scripts[info.script] = True
             tables.append(t)
+            if "DEBUG_SCRIPTS" in os.environ and len(t.scripts) > 1:
+                print("\t".join(["-" * 7, b.name, "-" * 42]), file=sys.stderr)
+                for g in b.graphemes:
+                    info = self.graphemes[g]
+                    print("\t".join([cp_repr(g), info.script, info.description]), file=sys.stderr)
             if "DEBUG_BLOCKS" in os.environ:
                 print("\t".join([str(len(b.graphemes)), b.name, ", ".join(t.scripts)]), file=sys.stderr)
 
