@@ -198,7 +198,7 @@
            style="display: {% if t.block.name == 'Basic Emoji' %}block{% else %}none{% endif %}">
         <div class="heading">
           <h1>{{t.block.name}}</h1>
-          <p class="scr">{{t.scripts|sort|join(", ")}}</p>
+          <p class="scr">{{t.scripts|sort|join(", ")|replace("_", " ")}}</p>
         </div>
         <table>
           {% for r in t.rows %}
