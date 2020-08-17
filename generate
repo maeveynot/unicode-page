@@ -228,7 +228,7 @@ class UnicodePageData:
             for g in emoji:
                 self.graphemes[g].script = "Emoji"
                 self.github_abbrevs[github_abbrev(g)] = g
-        self.blocks = [*self.pseudo_blocks.values(), *self.blocks]
+        self.blocks.extend(self.pseudo_blocks.values())
 
     def load_github_shortcodes(self, path):
         for shortcode, url in json_dict(path).items():
@@ -245,7 +245,10 @@ class UnicodePageData:
 
     # once upon a time there was plain text output here too... bring it back someday.
     def render_html(self, template_path):
-        tables = []
+        # we want something to render above the fold before we update visibility
+        # (which is a bunch of expensive DOM operations that we need to defer), so
+        # copy the first few blocks into a static section which we'll hide after
+        sections = {"facade": [], "full": []}
         # since there is no OrderedSet, this is a dict where we only ever set
         # values to True
         scripts = {}
@@ -286,7 +289,9 @@ class UnicodePageData:
                 t.rows.append(row)
                 t.scripts.add(info.script)
                 scripts[info.script] = True
-            tables.append(t)
+            if "Emoji" in t.scripts and len(sections["facade"]) < 10:
+                sections["facade"].append(t)
+            sections["full"].append(t)
             if "DEBUG_SCRIPTS" in os.environ and len(t.scripts) > 1:
                 print("\t".join(["-" * 7, b.name, "-" * 42]), file=sys.stderr)
                 for g in b.graphemes:
@@ -304,7 +309,7 @@ class UnicodePageData:
         )
         # make a valid DOM identifier out of arbitrary strings we've loaded here
         env.filters["dom_id"] = lambda s: re.sub(r"^[0-9]+|[^A-Za-z0-9_-]+", "", s)
-        return env.get_template(template_path).render(tables=tables, scripts=scripts)
+        return env.get_template(template_path).render(scripts=scripts, sections=sections)
 
 
 if __name__ == "__main__":

@@ -13,8 +13,10 @@
         font-size: 14pt;
       }
       body {
-        margin: auto;
         display: flex;
+        max-width: 640pt;
+        margin: auto;
+        padding: 4pt;
       }
       #toggles {
         max-width: 14em;
@@ -31,15 +33,17 @@
       .togglebox {
         transform: scale(150%);
       }
-      main {
-        max-width: 480pt;
-        padding: 4pt;
-      }
       h1, #toggles, .desc, .scr {
         font-family: system-ui, "Open Sans", Roboto, "Fira Sans", Ubuntu, "Helvetica Neue", Cantarell, "Segoe UI", sans-serif;
       }
+      #facade {
+        flex-grow: 1;
+      }
       .block {
         margin-bottom: 16pt;
+      }
+      #full > .block {
+        display: none;
       }
       .heading {
         display: flex;
@@ -198,10 +202,10 @@
         document.getElementById("script-toggles").open = true;
       }
     </script>
-    <main>
+    {% for s, tables in sections.items() %}
+    <section id="{{s}}">
       {% for t in tables %}
-      <div class="block {{t.scripts|sort|map('dom_id')|join(" ")}}"
-           style="display: {% if loop.index < 32 %}block{% else %}none{% endif %}">
+      <div class="block {{t.scripts|sort|map('dom_id')|join(" ")}}">
         <div class="heading">
           <h1>{{t.block_name}}</h1>
           <p class="scr">{{t.scripts|sort|join(", ")}}</p>
@@ -236,7 +240,8 @@
         </table>
       </div>
       {% endfor %}
-    </main>
+    </section>
+    {% endfor %}
     <script>
       const boxes = Array.prototype.slice.call(document.getElementsByClassName('togglebox'));
       const clearButton = document.getElementById("clear");
@@ -268,12 +273,12 @@
       boxes.forEach(b => {
         b.addEventListener("change", e => updateVisibility());
       });
-
       requestAnimationFrame(t => {
         if (!boxes.find(b => b.checked)) {
-          boxes[0].checked = true;
+          document.getElementById("Emoji").checked = true;
         }
         updateVisibility();
+        document.getElementById("facade").remove();
       });
     </script>
   </body>
