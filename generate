@@ -129,8 +129,8 @@ class Grapheme:
 
 
 class Table:
-    def __init__(self, block):
-        self.block = block
+    def __init__(self, block_name):
+        self.block_name = block_name
         self.scripts = set()
         self.rows = []
 
@@ -266,7 +266,7 @@ class UnicodePageData:
         # usability reasons, we want to place it at the very top of the list
         scripts["Emoji"] = True
         for b in self.blocks:
-            t = Table(b)
+            t = Table(b.name)
             for g in b.graphemes:
                 info = self.graphemes.get(g)
                 if not info:
