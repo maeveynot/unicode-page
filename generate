@@ -250,7 +250,6 @@ class UnicodePageData:
         # since there is no OrderedSet, this is a dict where we only ever set
         # values to True; prepopulate so that our fake "Emoji" script is first
         scripts = {
-            "Common": True,
             "Emoji": True,
         }
         for b in self.blocks:
