@@ -12,30 +12,6 @@ from itertools import chain
 from urllib.parse import urlparse
 
 
-# The weird-looking keys here are the strings emoji are labeled with in the
-# data in lieu of block names. Let's display something friendlier to users.
-# RGI_Emoji_Tag_Sequence is currently only used for flags (see TR51, Annex
-# C) but this might change in future versions so update here if it does.
-def pseudo_block_name(k, codepoints):
-    names = {
-        "RGI_Emoji_Modifier_Sequence": "Modifier Emoji",
-        "RGI_Emoji_ZWJ_Sequence": "ZWJ Emoji",
-        "Emoji_Keycap_Sequence": "Keycaps",
-        "RGI_Emoji_Flag_Sequence": "Flags",
-        "RGI_Emoji_Tag_Sequence": "Flags",
-    }
-    if k in names:
-        return names[k]
-    else:
-        # Let's kick a few things below the fold
-        if len(codepoints) == 2 and codepoints[1] == 0xFE0F:
-            if codepoints[0] < 0x2328:
-                return "Typographic symbols"
-            elif codepoints[0] < 0x2600:
-                return "User interface symbols"
-        return "Basic Emoji"
-
-
 # I'm making the perhaps controversial decision to have the descriptions
 # NOT ALL BE YELLING LIKE THIS. This means we need some heuristics for
 # correct title case. They currently fumble some instances where a word in
@@ -122,10 +98,11 @@ class Block:
 
 
 class Grapheme:
-    def __init__(self, description, category=None, script=None):
+    def __init__(self, description, category=None):
         self.description = " ".join(fixup_word(w) for w in description.split())
         self.category = category
-        self.script = script
+        self.block_name = None
+        self.script = None
 
 
 class Table:
@@ -138,14 +115,13 @@ class Table:
 class UnicodePageData:
     def __init__(self):
         self.blocks = []
-        # prepopulate this so that the basic block is first
-        self.pseudo_blocks = {"Basic Emoji": Block("Basic Emoji")}
+        self.pseudo_blocks = {}
         self.graphemes = {}
         self.github_abbrevs = {}
         self.shortcodes = defaultdict(list)
 
-        self.load_blocks("NamesList.txt")
         self.load_unicode_data("UnicodeData.txt")
+        self.load_blocks("NamesList.txt")
         self.load_scripts("Scripts.txt")
         self.load_emoji("emoji-sequences.txt", "emoji-zwj-sequences.txt")
         self.load_github_shortcodes("github-shortcodes.json")
@@ -157,6 +133,22 @@ class UnicodePageData:
             for g in self.graphemes.keys():
                 if not any(g in b.graphemes for b in self.blocks):
                     print(f"warning: orphaned: {cp_repr(g)}", file=sys.stderr)
+
+    def load_unicode_data(self, path):
+        for fields in text_fields(path):
+            codepoint = int(fields[0], 16)
+            category = fields[2]
+            description = fields[1]
+            if higher_plane(codepoint):
+                continue
+            if description == "<control>":
+                description = fields[10]
+            # maybe we should keep track of these ranges for debug purposes later
+            if description.endswith(", First>") or description.endswith(", Last>"):
+                continue
+            g = chr(codepoint)
+            self.graphemes[g] = Grapheme(description, category)
+            self.github_abbrevs[github_abbrev(g)] = g
 
     def load_blocks(self, path):
         name = None
@@ -175,27 +167,15 @@ class UnicodePageData:
                     if not block:
                         block = Block(name)
                         self.blocks.append(block)
-                    block.graphemes.append(chr(codepoint))
+                    g = chr(codepoint)
+                    if g in self.graphemes:
+                        self.graphemes[g].block_name = name
+                    else:
+                        print(f"warning: block for unknown grapheme {g_repr(g)} is {name}", file=sys.stderr)
+                    block.graphemes.append(g)
                 except:
                     print("error parsing", repr(fields), file=sys.stderr)
                     sys.exit(1)
-
-    # umm, actually this might be completely redundant with nameslist...
-    def load_unicode_data(self, path):
-        for fields in text_fields(path):
-            codepoint = int(fields[0], 16)
-            category = fields[2]
-            description = fields[1]
-            if higher_plane(codepoint):
-                continue
-            if description == "<control>":
-                description = fields[10]
-            # maybe we should keep track of these ranges for debug purposes later
-            if description.endswith(", First>") or description.endswith(", Last>"):
-                continue
-            g = chr(codepoint)
-            self.graphemes[g] = Grapheme(description, category)
-            self.github_abbrevs[github_abbrev(g)] = g
 
     def load_scripts(self, path):
         for fields in text_fields(path):
@@ -230,10 +210,18 @@ class UnicodePageData:
                 # this is a sequence; we haven't loaded any of these yet
                 codepoints = [int(i, 16) for i in fields[0].split()]
                 g = "".join(chr(c) for c in codepoints)
-                n = pseudo_block_name(fields[1], codepoints)
-                if n not in self.pseudo_blocks:
-                    self.pseudo_blocks[n] = Block(n)
-                self.pseudo_blocks[n].graphemes.append(g)
+                # find/create a fake "(emoji)" block corresponding to the first codepoint's block
+                if len(codepoints) > 1:
+                    root = chr(codepoints[0])
+                    # TODO: if root's fake script is "Emoji", insert into its real block instead
+                    if root in self.graphemes:
+                        name = f"{self.graphemes[root].block_name} (emoji)"
+                else:
+                    print(f"warning: unknown emoji {cp_repr(g)}", file=sys.stderr)
+                    name = "Unknown emoji"
+                if name not in self.pseudo_blocks:
+                    self.pseudo_blocks[name] = Block(name)
+                self.pseudo_blocks[name].graphemes.append(g)
                 # the category here is actually in the comment, but we've stripped comments
                 self.graphemes[g] = Grapheme(fields[2], "So")
                 emoji = [g]

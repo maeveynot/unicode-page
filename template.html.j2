@@ -196,7 +196,7 @@
     <main>
       {% for t in tables %}
       <div class="block {{t.scripts|sort|join(" ")}}"
-           style="display: {% if t.block_name == 'Basic Emoji' %}block{% else %}none{% endif %}">
+           style="display: {% if loop.index < 32 %}block{% else %}none{% endif %}">
         <div class="heading">
           <h1>{{t.block_name}}</h1>
           <p class="scr">{{t.scripts|sort|join(", ")|replace("_", " ")}}</p>
