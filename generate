@@ -154,9 +154,10 @@ class UnicodePageData:
                 continue
             if fields[0] == "@":
                 if fields[2] != cur_block_name:
+                    if cur_block and cur_block.graphemes:
+                        self.blocks.append(cur_block)
                     cur_block_name = fields[2]
                     cur_block = Block(cur_block_name)
-                    self.blocks.append(cur_block)
             elif re.match(r"[0-9A-Fa-f]+\b", fields[0]):
                 try:
                     codepoint = int(fields[0], 16)
@@ -167,6 +168,8 @@ class UnicodePageData:
                 except:
                     print("error parsing", repr(fields), file=sys.stderr)
                     sys.exit(1)
+        if cur_block and cur_block.graphemes:
+            self.blocks.append(cur_block)
 
     # umm, actually this might be completely redundant with nameslist...
     def load_unicode_data(self, path):
@@ -191,9 +194,10 @@ class UnicodePageData:
         for fields in chain(*[text_fields(path) for path in paths]):
             b = EMOJI_PSEUDO_BLOCKS.get(fields[1], "Emoji")
             if b != cur_block_name:
+                if cur_block and cur_block.graphemes:
+                    self.blocks.append(cur_block)
                 cur_block_name = b
                 cur_block = Block(cur_block_name)
-                self.blocks.append(cur_block)
             if ".." in fields[0]:
                 # a run of basic emoji; we already have these loaded with description and
                 # category (fields[1] only contains an informal name of the first emoji)
@@ -209,6 +213,8 @@ class UnicodePageData:
                 cur_block.graphemes.append(g)
                 self.graphemes[g].script = "Emoji"
                 self.github_abbrevs[github_abbrev(g)] = g
+        if cur_block and cur_block.graphemes:
+            self.blocks.append(cur_block)
 
     def load_scripts(self, path):
         for fields in text_fields(path):
@@ -285,6 +291,8 @@ class UnicodePageData:
                 t.scripts.add(info.script)
                 scripts[info.script] = True
             tables.append(t)
+            if "DEBUG_BLOCKS" in os.environ:
+                print("\t".join([str(len(b.graphemes)), b.name, ", ".join(t.scripts)]), file=sys.stderr)
 
         env = jinja2.Environment(
             loader=jinja2.FileSystemLoader("."),
