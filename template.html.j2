@@ -193,6 +193,11 @@
         </p>
       </details>
     </section>
+    <script>
+      if (getComputedStyle(document.body).display == "flex") {
+        document.getElementById("script-toggles").open = true;
+      }
+    </script>
     <main>
       {% for t in tables %}
       <div class="block {{t.scripts|sort|join(" ")}}"
@@ -234,6 +239,7 @@
     </main>
     <script>
       const boxes = Array.prototype.slice.call(document.getElementsByClassName('togglebox'));
+      const clearButton = document.getElementById("clear");
 
       const clearVisibility = () => {
         boxes.forEach(b => {
@@ -258,14 +264,10 @@
         });
       };
 
-      document.getElementById("clear").addEventListener("click", e => clearVisibility());
+      clearButton.addEventListener("click", e => clearVisibility());
       boxes.forEach(b => {
         b.addEventListener("change", e => updateVisibility());
       });
-
-      if (getComputedStyle(document.body).display == "flex") {
-        document.getElementById("script-toggles").open = true;
-      }
 
       requestAnimationFrame(t => {
         if (!boxes.find(b => b.checked)) {
