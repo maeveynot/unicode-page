@@ -184,7 +184,11 @@
     <section id="toggles">
       <details id="script-toggles">
         <summary id="script-toggles-head">Scripts</summary>
-        <p><button id="clear">Clear</button></p>
+        <p>
+          <button id="show-all">All</button>
+          <button id="hide-all">None</button>
+          <button id="reset">Reset</button>
+        </p>
         {% for s in scripts %}
         <p class="toggle">
           <input class="togglebox" type="checkbox" id="{{s|dom_id}}" value="{{s|dom_id}}">
@@ -244,14 +248,13 @@
     {% endfor %}
     <script>
       const boxes = Array.prototype.slice.call(document.getElementsByClassName('togglebox'));
-      const clearButton = document.getElementById("clear");
 
-      const clearVisibility = () => {
+      const setVisibilityAll = (v) => {
         boxes.forEach(b => {
-          b.checked = false;
+          b.checked = v;
         });
         document.querySelectorAll(".block").forEach(div => {
-          div.style.display = "none";
+          div.style.display = v ? "block" : "none";
         });
       };
 
@@ -269,10 +272,22 @@
         });
       };
 
-      clearButton.addEventListener("click", e => clearVisibility());
       boxes.forEach(b => {
         b.addEventListener("change", e => updateVisibility());
       });
+      document.getElementById("show-all").addEventListener("click", e => {
+        setVisibilityAll(true)
+      });
+      document.getElementById("hide-all").addEventListener("click", e => {
+        setVisibilityAll(false)
+      });
+      document.getElementById("reset").addEventListener("click", e => {
+        boxes.forEach(b => {
+          b.checked = (b.id == "Emoji");
+        });
+        updateVisibility();
+      });
+
       requestAnimationFrame(t => {
         if (!boxes.find(b => b.checked)) {
           document.getElementById("Emoji").checked = true;
