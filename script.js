@@ -1,45 +1,42 @@
-const boxes = Array.prototype.slice.call(document.getElementsByClassName('box'));
+const initialScript = "sE";
+const toggles = Array.from(document.getElementsByClassName("box"));
 
-const setVisibilityAll = (v) => {
-  boxes.forEach(b => {
-    b.checked = v;
-  });
-  document.querySelectorAll(".seg").forEach(div => {
-    div.style.display = v ? "block" : "none";
-  });
+const initToggles = () => {
+  if (!toggles.some(box => box.checked)) {
+    document.getElementById(initialScript).checked = true;
+  }
 };
 
 const updateVisibility = () => {
-  const visible = new Set();
-  boxes.forEach(b => {
-    if (b.checked) {
-      document.querySelectorAll(".seg." + b.value).forEach(div => {
-        visible.add(div);
-      });
-    }
-  });
-  document.querySelectorAll(".seg").forEach(div => {
-    div.style.display = visible.has(div) ? "block" : "none";
+  const visible = new Set(toggles.flatMap(box =>
+    box.checked ? Array.from(document.querySelectorAll(".seg." + box.value)) : []
+  ));
+  document.querySelectorAll(".seg").forEach(node => {
+    node.style.display = visible.has(node) ? "block" : "none";
   });
 };
 
-boxes.forEach(b => {
-  b.addEventListener("change", e => updateVisibility());
-});
-document.getElementById("show-none").addEventListener("click", e => {
-  setVisibilityAll(false)
-});
-document.getElementById("show-init").addEventListener("click", e => {
-  boxes.forEach(b => {
-    b.checked = (b.id == "sE");
+const setAllToggles = (predicate) => {
+  toggles.forEach(box => {
+    box.checked = predicate(box);
   });
   updateVisibility();
+};
+
+document.getElementById("show-init").addEventListener("click", event => {
+  setAllToggles(box => box.id == initialScript);
+});
+document.getElementById("show-rand").addEventListener("click", event => {
+  setAllToggles(box => Math.random() < 0.05);
+});
+toggles.forEach(box => {
+  box.addEventListener("change", event => {
+    updateVisibility();
+  });
 });
 
-requestAnimationFrame(t => {
-  if (!boxes.find(b => b.checked)) {
-    document.getElementById("sE").checked = true;
-  }
+requestAnimationFrame(timestamp => {
+  initToggles();
   updateVisibility();
   document.getElementById("facade").remove();
 });
