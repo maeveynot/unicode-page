@@ -12,11 +12,8 @@ emoji-sequences.txt emoji-zwj-sequences.txt:
 github-shortcodes.json:
 	@curl -H "Accept: application/vnd.github.v3+json" -o "$@" 'https://api.github.com/emojis'
 
-index.html: template.html.j2 UnicodeData.txt NamesList.txt Scripts.txt emoji-sequences.txt emoji-zwj-sequences.txt github-shortcodes.json generate
-	./generate "$<" > "$@"
-
-index.min.html: index.html
-	minify-html --src "$<" --out "$@"
+index.html index.min.html: template.html.j2 style.css script.js UnicodeData.txt NamesList.txt Scripts.txt emoji-sequences.txt emoji-zwj-sequences.txt github-shortcodes.json generate
+	./generate
 
 index.min.html.gz: index.min.html
 	gzip -9fk "$<"

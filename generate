@@ -7,6 +7,8 @@ import re
 import math
 import json
 import jinja2
+import rcssmin
+import minify_html
 from collections import defaultdict
 from itertools import chain
 from urllib.parse import urlparse
@@ -309,9 +311,29 @@ class UnicodePageData:
         )
         # make a valid DOM identifier out of arbitrary strings we've loaded here
         env.filters["dom_id"] = lambda s: re.sub(r"^[0-9]+|[^A-Za-z0-9_-]+", "", s)
-        return env.get_template(template_path).render(scripts=scripts, sections=sections)
+
+        template = env.get_template(template_path)
+        vars = {
+            "js": js,
+            "scripts": scripts,
+            "sections": sections,
+        }
+        normal_page = template.render(**vars, css=css)
+        mincss_page = template.render(**vars, css=rcssmin.cssmin(css))
+        minified_page = minify_html.minify(mincss_page, minify_js=True)
+        return (normal_page, minified_page)
 
 
 if __name__ == "__main__":
+    with open("style.css") as f:
+        css = f.read()
+    with open("script.js") as f:
+        js = f.read()
+
     data = UnicodePageData()
-    print(data.render_html(sys.argv[1]))
+    normal_page, minified_page = data.render_html("template.html.j2")
+
+    with open("index.html", "w") as f:
+        f.write(normal_page)
+    with open("index.min.html", "w") as f:
+        f.write(minified_page)
