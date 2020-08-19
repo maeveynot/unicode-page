@@ -90,19 +90,18 @@ td {
   float: right;
   font-size: 10pt;
 }
-.c2 { font-size: 76%; }
-.c3, .c4 { font-size: 58%; }
-.c5, .c6 { font-size: 52%; }
-.c7, .c8 { font-size: 52%; line-height: 90%; }
-.c9, .c10 { font-size: 32%; line-height: 90%; }
-.d2 { font-size: 96%; }
-.d3 { font-size: 92%; }
-.d4 { font-size: 86%; }
-.d5 { font-size: 80%; }
-.d6 { font-size: 72%; }
-.d7 { font-size: 64%; }
-.d8 { font-size: 54%; }
-.d9 { font-size: 42%; }
+.c1 { font-size: 75%; }
+.c2 { font-size: 60%; }
+.c3 { font-size: 48%; }
+.c4 { font-size: 44%; }
+.n1 { font-size: 93%; }
+.n2 { font-size: 86%; }
+.n3 { font-size: 79%; }
+.n4 { font-size: 72%; }
+.n5 { font-size: 65%; }
+.n6 { font-size: 57%; }
+.n7 { font-size: 50%; }
+.n8 { font-size: 43%; }
 
 @media screen and (max-width: 640px) {
   body {
@@ -121,12 +120,11 @@ td {
   .sc {
     font-size: 8pt;
   }
-  .c1 { font-size: 48%; }
-  .c2 { font-size: 40%; }
-  .c3, .c4 { font-size: 32%; }
-  .c5, .c6 { font-size: 24%; }
-  .c7, .c8 { font-size: 24%; line-height: 90%; }
-  .c9, .c10 { font-size: 16%; line-height: 90%; }
+  .c0 { font-size: 56%; }
+  .c1 { font-size: 40%; }
+  .c2 { font-size: 32%; }
+  .c3 { font-size: 25%; }
+  .c4 { font-size: 22%; }
   .desc {
     max-width: 144pt;
   }

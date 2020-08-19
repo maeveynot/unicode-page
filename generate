@@ -305,9 +305,9 @@ class UnicodePageData:
                     "grapheme_repr": escape or g,
                     "is_escape": bool(escape),
                     "name": info.name,
-                    "name_mag": min(9, int(math.sqrt(len(info.name)))),
+                    "size": 10 - int(10 * 23 / max(23, len(info.name))),
                     "cp_repr": cp_repr(g),
-                    "length": len(g),
+                    "cp_rows": int((len(g) + 1) / 2) if len(g) > 1 else 0,
                     "shortcodes": self.shortcodes[g],
                     "category": info.category,
                 }
