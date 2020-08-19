@@ -34,14 +34,14 @@ document.getElementById("hide-all").addEventListener("click", e => {
 });
 document.getElementById("reset").addEventListener("click", e => {
   boxes.forEach(b => {
-    b.checked = (b.id == "Emoji");
+    b.checked = (b.id == "sE");
   });
   updateVisibility();
 });
 
 requestAnimationFrame(t => {
   if (!boxes.find(b => b.checked)) {
-    document.getElementById("Emoji").checked = true;
+    document.getElementById("sE").checked = true;
   }
   updateVisibility();
   document.getElementById("facade").remove();

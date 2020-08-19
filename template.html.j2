@@ -18,10 +18,10 @@
           <button id="hide-all">None</button>
           <button id="reset">Reset</button>
         </p>
-        {% for s in scripts %}
+        {% for s, s_id in scripts.items() %}
         <p class="toggle">
-          <input class="togglebox" type="checkbox" id="{{s|dom_id}}" value="{{s|dom_id}}">
-          <label for="{{s|dom_id}}">{{s}}</label>
+          <input class="togglebox" type="checkbox" id="{{s_id}}" value="{{s_id}}">
+          <label for="{{s_id}}">{{s}}</label>
         </p>
         {% endfor %}
         <p id="credits">
@@ -35,18 +35,18 @@
         document.getElementById("script-toggles").open = true;
       }
     </script>
-    {% for s, tables in sections.items() %}
+    {% for s, charts in sections.items() %}
     <section id="{{s}}">
-      {% for t in tables %}
-      <div class="block {{t.scripts|sort|map('dom_id')|join(" ")}}">
+      {% for chart in charts %}
+      <div class="block{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
         <div class="heading">
-          <h1>{{t.block_name}}</h1>
-          <p class="scr">{{t.scripts|sort|join(", ")}}</p>
+          <h1>{{chart.block_name}}</h1>
+          <p class="scr">{{chart.scripts|sort|join(", ")}}</p>
         </div>
         <table>
-          {% for r in t.rows %}
+          {% for r in chart.rows %}
           <tr>
-            <td class="chr {{r.category|dom_id}}">
+            <td class="chr {{r.category}}">
               {% if r.is_escape %}
               <span class="lit esc">{{r.grapheme_repr}}</span>
               {% else %}
@@ -54,10 +54,10 @@
               {% endif %}
             </td>
             <td class="lit cp c{{r.length}}">
-              {{r.codepoints_repr}}
+              {{r.cp_repr}}
             </td>
-            <td class="desc d{{r.desc_magnitude}}">
-              <div class="txt">{{r.description}}</div>
+            <td class="desc d{{r.name_mag}}">
+              <div class="txt">{{r.name}}</div>
               {% if r.shortcodes %}
               <div class="sc">
                 {% for sc in r.shortcodes %}
