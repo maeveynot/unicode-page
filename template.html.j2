@@ -29,11 +29,6 @@
         Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
       </p>
     </nav>
-    <script>
-      if (getComputedStyle(document.body).display == "flex") {
-        document.getElementById("st").open = true;
-      }
-    </script>
     <main>
       {% for s, charts in sections.items() %}
       <section id="{{s}}">

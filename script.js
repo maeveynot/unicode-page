@@ -38,5 +38,8 @@ toggles.forEach(box => {
 requestAnimationFrame(timestamp => {
   initToggles();
   updateVisibility();
+  if (getComputedStyle(document.body).display == "flex") {
+    document.getElementById("st").open = true;
+  }
   document.getElementById("facade").remove();
 });
