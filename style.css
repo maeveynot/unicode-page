@@ -32,10 +32,10 @@ h1, #toggles, .desc, .scr {
 #facade {
   flex-grow: 1;
 }
-.block {
+.seg {
   margin-bottom: 16pt;
 }
-#full > .block {
+#full > .seg {
   display: none;
 }
 .heading {

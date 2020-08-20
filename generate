@@ -82,7 +82,7 @@ def parse_cp_range(cp_str):
         return [int(cp_str, 16)]
 
 
-# Things that appear (as single code points) in the blocks list that we
+# Things that appear (as single code points) in the segments list that we
 # don't want to load at all.
 IGNORE_CODEPOINTS = [
     "<reserved>",
@@ -103,44 +103,44 @@ class Grapheme:
     def __init__(self, name, category=None):
         self.name = " ".join(fixup_word(w) for w in name.split())
         self.category = category
-        self.block_name = None
+        self.segment_name = None
         self.script = None
 
 
-class Block:
+class Segment:
     def __init__(self, name):
         self.name = name
         self.graphemes = []
 
 
-class BlockChart:
-    def __init__(self, block_name):
-        self.block_name = block_name
+class SegmentChart:
+    def __init__(self, segment_name):
+        self.segment_name = segment_name
         self.rows = []
         self.scripts = set()
 
 
 class UnicodePageData:
     def __init__(self):
-        self.blocks = []
-        self.pseudo_blocks = {}
+        self.segments = []
+        self.pseudo_segments = {}
         self.graphemes = {}
         self.scripts = {}
         self.github_abbrevs = {}
         self.shortcodes = defaultdict(list)
 
         self.load_unicode_data()
-        self.load_blocks()
+        self.load_segments()
         self.load_scripts()
         self.load_emoji()
         self.load_github_shortcodes()
 
         # This check is obviously slow, but we want to be able to know if something
-        # didn't end up in a block and won't be rendered.
+        # didn't end up in a segment and won't be rendered.
         if "DEBUG" in os.environ:
             print("debug: checking for orphans...", file=sys.stderr)
             for g in self.graphemes.keys():
-                if not any(g in b.graphemes for b in self.blocks):
+                if not any(g in seg.graphemes for seg in self.segments):
                     print(f"warning: orphaned grapheme {cp_repr(g)}", file=sys.stderr)
 
     def load_unicode_data(self):
@@ -158,12 +158,12 @@ class UnicodePageData:
             self.graphemes[g] = Grapheme(name, cat)
             self.github_abbrevs[github_abbrev(g)] = g
 
-    def load_blocks(self):
-        b = None
-        block_name = None
+    def load_segments(self):
+        seg = None
+        seg_name = None
         for first, *rest in text_fields("NamesList.txt", "\t"):
             # There's a lot of different things we can encounter in the first field. We're
-            # only interested in block and codepoint names, but we might want to add the
+            # only interested in segment and codepoint names, but we might want to add the
             # others later:
             #
             # ;<str>  charset declaration
@@ -171,15 +171,15 @@ class UnicodePageData:
             # @@@+    informational content about the list (might be empty)
             # @@      block name
             # @@+     probably block info, but always empty
-            # @       block name
-            # @+      block info
+            # @       segment name
+            # @+      segment info
             # @~      not sure what this is
             # <hex>   codepoint name
             # <none>  codepoint info (starts with a character indicating what kind)
             #
             if first == "@":
-                _, block_name = rest
-                b = None
+                _, seg_name = rest
+                seg = None
             elif re.match(r"[0-9A-Fa-f]+\b", first):
                 cp_str = first
                 (name,) = rest
@@ -188,15 +188,15 @@ class UnicodePageData:
                 codepoint = int(cp_str, 16)
                 if higher_plane(codepoint):
                     continue
-                if not b:
-                    b = Block(block_name)
-                    self.blocks.append(b)
+                if not seg:
+                    seg = Segment(seg_name)
+                    self.segments.append(seg)
                 g = chr(codepoint)
                 if g in self.graphemes:
-                    self.graphemes[g].block_name = block_name
+                    self.graphemes[g].segment_name = seg_name
                 else:
-                    print(f"warning: unknown grapheme in block '{block_name}': {cp_repr(g)}", file=sys.stderr)
-                b.graphemes.append(g)
+                    print(f"warning: unknown grapheme in segment '{seg_name}': {cp_repr(g)}", file=sys.stderr)
+                seg.graphemes.append(g)
 
     def load_scripts(self):
         for cp_str, script in text_fields("Scripts.txt"):
@@ -220,16 +220,16 @@ class UnicodePageData:
                 # This is an emoji that's a sequence; we haven't seen any of these yet
                 codepoints = [int(i, 16) for i in cp_str.split()]
                 g = "".join(chr(c) for c in codepoints)
-                # Find/create a fake block corresponding to the first codepoint's block
+                # Find/create a fake segment corresponding to the first codepoint's segment
                 root = chr(codepoints[0])
                 if len(codepoints) > 1 and root in self.graphemes:
-                    block_name = f"{self.graphemes[root].block_name}"
+                    seg_name = f"{self.graphemes[root].segment_name}"
                 else:
                     print(f"warning: unknown emoji {cp_repr(g)}", file=sys.stderr)
-                    block_name = "Emoji"
-                if block_name not in self.pseudo_blocks:
-                    self.pseudo_blocks[block_name] = Block(block_name)
-                self.pseudo_blocks[block_name].graphemes.append(g)
+                    seg_name = "Emoji"
+                if seg_name not in self.pseudo_segments:
+                    self.pseudo_segments[seg_name] = Segment(seg_name)
+                self.pseudo_segments[seg_name].graphemes.append(g)
                 # The category here is actually in the comment, but we've stripped comments
                 self.graphemes[g] = Grapheme(name, "So")
                 emoji = [g]
@@ -240,7 +240,7 @@ class UnicodePageData:
             for g in emoji:
                 self.graphemes[g].script = "Emoji"
                 self.github_abbrevs[github_abbrev(g)] = g
-        self.blocks.extend(self.pseudo_blocks.values())
+        self.segments.extend(self.pseudo_segments.values())
 
     def load_github_shortcodes(self):
         for shortcode, url in json_dict("github-shortcodes.json").items():
@@ -272,7 +272,7 @@ class UnicodePageData:
     def render_html(self, template_path):
         # We want to paint something above the fold before we update visibility
         # (which is a bunch of expensive DOM operations that we need to defer), so
-        # copy the first few blocks into a static section which we'll hide after.
+        # copy the first few segments into a static section which we'll hide after.
         sections = {"facade": [], "full": []}
         # Keep track of all the scripts we've seen, and give them short DOM
         # identifiers. Technically, the first emoji (U+231A WATCH) is encountered
@@ -281,9 +281,9 @@ class UnicodePageData:
         # the list, so prepopulate it here.
         self.add_script("Emoji")
 
-        for b in self.blocks:
-            chart = BlockChart(b.name)
-            for g in b.graphemes:
+        for seg in self.segments:
+            chart = SegmentChart(seg.name)
+            for g in seg.graphemes:
                 info = self.graphemes.get(g)
                 if not info:
                     print(f"warning: no grapheme for {cp_repr(g)}", file=sys.stderr)
@@ -318,11 +318,11 @@ class UnicodePageData:
             if "Emoji" in chart.scripts and len(sections["facade"]) < 10:
                 sections["facade"].append(chart)
             sections["full"].append(chart)
-            if "DEBUG_BLOCKS" in os.environ:
-                print("\t".join([str(len(b.graphemes)), b.name, ", ".join(chart.scripts)]), file=sys.stderr)
+            if "DEBUG_SEGMENTS" in os.environ:
+                print("\t".join([str(len(seg.graphemes)), seg.name, ", ".join(chart.scripts)]), file=sys.stderr)
             if "DEBUG_SCRIPTS" in os.environ and len(chart.scripts) > 1:
-                print("\t".join(["-", b.name, "-"]), file=sys.stderr)
-                for g in b.graphemes:
+                print("\t".join(["-", seg.name, "-"]), file=sys.stderr)
+                for g in seg.graphemes:
                     info = self.graphemes[g]
                     print("\t".join([cp_repr(g), info.script, info.name]), file=sys.stderr)
 

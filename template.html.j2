@@ -38,9 +38,9 @@
     {% for s, charts in sections.items() %}
     <section id="{{s}}">
       {% for chart in charts %}
-      <div class="block{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
+      <div class="seg{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
         <div class="heading">
-          <h1>{{chart.block_name}}</h1>
+          <h1>{{chart.segment_name}}</h1>
           <p class="scr">{{chart.scripts|sort|join(", ")}}</p>
         </div>
         <table>

@@ -4,7 +4,7 @@ const setVisibilityAll = (v) => {
   boxes.forEach(b => {
     b.checked = v;
   });
-  document.querySelectorAll(".block").forEach(div => {
+  document.querySelectorAll(".seg").forEach(div => {
     div.style.display = v ? "block" : "none";
   });
 };
@@ -13,12 +13,12 @@ const updateVisibility = () => {
   const visible = new Set();
   boxes.forEach(b => {
     if (b.checked) {
-      document.querySelectorAll(".block." + b.value).forEach(div => {
+      document.querySelectorAll(".seg." + b.value).forEach(div => {
         visible.add(div);
       });
     }
   });
-  document.querySelectorAll(".block").forEach(div => {
+  document.querySelectorAll(".seg").forEach(div => {
     div.style.display = visible.has(div) ? "block" : "none";
   });
 };
