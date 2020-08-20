@@ -1,4 +1,4 @@
-const boxes = Array.prototype.slice.call(document.getElementsByClassName('togglebox'));
+const boxes = Array.prototype.slice.call(document.getElementsByClassName('box'));
 
 const setVisibilityAll = (v) => {
   boxes.forEach(b => {
@@ -26,13 +26,10 @@ const updateVisibility = () => {
 boxes.forEach(b => {
   b.addEventListener("change", e => updateVisibility());
 });
-document.getElementById("show-all").addEventListener("click", e => {
-  setVisibilityAll(true)
-});
-document.getElementById("hide-all").addEventListener("click", e => {
+document.getElementById("show-none").addEventListener("click", e => {
   setVisibilityAll(false)
 });
-document.getElementById("reset").addEventListener("click", e => {
+document.getElementById("show-init").addEventListener("click", e => {
   boxes.forEach(b => {
     b.checked = (b.id == "sE");
   });

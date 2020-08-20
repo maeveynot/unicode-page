@@ -3,78 +3,85 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="shortcut icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="shortcut" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/favicon-192x192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" sizes="180x180">
     <title>unicode.page</title>
     <style>{{css|safe}}</style>
   </head>
   <body>
-    <section id="toggles">
-      <details id="script-toggles">
-        <summary id="script-toggles-head">Scripts</summary>
+    <nav>
+      <details id="st">
+        <summary id="sth">Scripts</summary>
         <p>
-          <button id="show-all">All</button>
-          <button id="hide-all">None</button>
-          <button id="reset">Reset</button>
+          <button id="show-init">Reset</button>
+          <button id="show-none">None</button>
         </p>
         {% for s, s_id in scripts.items() %}
-        <p class="toggle">
-          <input class="togglebox" type="checkbox" id="{{s_id}}" value="{{s_id}}">
+        <p class="tog">
+          <input class="box" type="checkbox" id="{{s_id}}" value="{{s_id}}">
           <label for="{{s_id}}">{{s}}</label>
         </p>
         {% endfor %}
-        <p id="credits">
-          By <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
-          Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
-        </p>
       </details>
-    </section>
+      <p class="cred">
+        By <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
+        Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
+      </p>
+    </nav>
     <script>
       if (getComputedStyle(document.body).display == "flex") {
-        document.getElementById("script-toggles").open = true;
+        document.getElementById("st").open = true;
       }
     </script>
-    {% for s, charts in sections.items() %}
-    <section id="{{s}}">
-      {% for chart in charts %}
-      <div class="seg{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
-        <div class="heading">
-          <h1>{{chart.segment_name}}</h1>
-          <p class="scr">{{chart.scripts|sort|join(", ")}}</p>
-        </div>
-        <table>
-          {% for r in chart.rows %}
-          <tr>
-            <td class="chr {{r.category}}">
-              {% if r.is_escape %}
-              <span class="lit esc">{{r.grapheme_repr}}</span>
+    <main>
+      {% for s, charts in sections.items() %}
+      <section id="{{s}}">
+        {% for chart in charts %}
+        <div class="seg{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
+          <div class="snh">
+            <h1>{{chart.segment_name}}</h1>
+            <p class="scr">
+              {% if s == 'facade' %}
+              Loading…
               {% else %}
-              {{r.grapheme_repr}}
+              {{chart.scripts|sort|join(", ")}}
               {% endif %}
-            </td>
-            <td class="lit cp c{{r.cp_rows}}">
-              {{r.cp_repr}}
-            </td>
-            <td class="desc n{{r.size}}">
-              <div class="txt">{{r.name}}</div>
-              {% if r.shortcodes %}
-              <div class="sc">
-                {% for sc in r.shortcodes %}
-                {# note that there is a U+2002 EN SPACE at the end of this line #}
-                <span class="lit">:{{sc}}:</span> 
-                {% endfor %}
-              </div>
-              {% endif %}
-            </td>
-            {# <td class="category">{{r.category}}</td> #}
-          </tr>
-          {% endfor %}
-        </table>
-      </div>
+            </p>
+          </div>
+          <table>
+            {% for r in chart.rows %}
+            <tr>
+              <td class="chr {{r.category}}">
+                {% if r.is_escape %}
+                <span class="lit esc">{{r.grapheme_repr}}</span>
+                {% else %}
+                {{r.grapheme_repr}}
+                {% endif %}
+              </td>
+              <td class="lit cp c{{r.cp_rows}}">
+                {{r.cp_repr}}
+              </td>
+              <td class="nm n{{r.size}}">
+                <div class="txt">{{r.name}}</div>
+                {% if r.shortcodes %}
+                <div class="sc">
+                  {% for sc in r.shortcodes %}
+                  {# here is a → #} {# ← U+2002 EN SPACE #}
+                  <span class="lit">:{{sc}}:</span>
+                  {% endfor %}
+                </div>
+                {% endif %}
+              </td>
+              {# <td class="category">{{r.category}}</td> #}
+            </tr>
+            {% endfor %}
+          </table>
+        </div>
+        {% endfor %}
+      </section>
       {% endfor %}
-    </section>
-    {% endfor %}
+    </main>
     <script>{{js|safe}}</script>
   </body>
 </html>
