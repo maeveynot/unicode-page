@@ -207,11 +207,10 @@ class UnicodePageData:
                 if g in self.graphemes:
                     self.graphemes[g].script = script.replace("_", " ")
                 else:
-                    g = None
-                    break
-            # This happens for the <foo, First>..<foo, Last> ranges
-            if g is None and "DEBUG" in os.environ:
-                print(f"debug: ignoring {cp_str} for script {script}", file=sys.stderr)
+                    # This happens for the <foo, First>..<foo, Last> ranges
+                    if "DEBUG" in os.environ:
+                        print(f"debug: ignoring {cp_str} for script {script}", file=sys.stderr)
+                        break
 
     def load_emoji(self, *paths):
         fields = chain(text_fields("emoji-sequences.txt"), text_fields("emoji-zwj-sequences.txt"))
