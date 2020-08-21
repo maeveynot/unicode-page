@@ -105,6 +105,10 @@ td {
   nav {
     max-width: 100%;
   }
+  #st {
+    margin: 0;
+    padding: 1em;
+  }
   #stc {
     columns: 2;
   }
