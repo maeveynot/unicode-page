@@ -38,13 +38,7 @@
         <div class="seg{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
           <div class="snh">
             <h1>{{chart.segment_name}}</h1>
-            <p class="scr">
-              {% if s == 'facade' %}
-              Loading…
-              {% else %}
-              {{chart.scripts|sort|join(", ")}}
-              {% endif %}
-            </p>
+            <p class="scr">{% if s == 'facade' %}Loading…{% else %}{{chart.scripts|sort|join(", ")}}{% endif %}</p>
           </div>
           <table>
             {% for r in chart.rows %}
