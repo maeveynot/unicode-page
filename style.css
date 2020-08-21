@@ -31,9 +31,6 @@ main {
   margin-bottom: 16pt;
   display: none;
 }
-.seg.facade {
-  display: block;
-}
 .snh {
   display: flex;
   align-items: center;

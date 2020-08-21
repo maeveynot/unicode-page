@@ -14,8 +14,8 @@
       <details id="st">
         <summary id="sth">
           Scripts
-          <button id="show-init">Reset</button>
           <button id="show-rand">Random</button>
+          <button id="show-init">Reset</button>
         </summary>
         <div id="stc">
           {% for s, s_id in scripts.items() %}
@@ -35,10 +35,10 @@
       {% for s, charts in sections.items() %}
       <section id="{{s}}">
         {% for chart in charts %}
-        <div class="seg{% if s == 'facade' %} facade{% endif %}{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}">
+        <div{% if s != 'facade' %} class="seg{% for s in chart.scripts|sort %} {{scripts[s]}}{% endfor %}"{% endif %}>
           <div class="snh">
             <h1>{{chart.segment_name}}</h1>
-            <p class="scr">{% if s == 'facade' %}Loading…{% else %}{{chart.scripts|sort|join(", ")}}{% endif %}</p>
+            <p class="scr">{{chart.scripts|sort|join(", ")}}</p>
           </div>
           <table>
             {% for r in chart.rows %}
