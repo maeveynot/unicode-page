@@ -118,6 +118,7 @@ class SegmentChart:
         self.segment_name = segment_name
         self.rows = []
         self.scripts = set()
+        self.above_fold = False
 
 
 class UnicodePageData:
@@ -269,9 +270,11 @@ class UnicodePageData:
 
     # Once upon a time there was plain text output here too... bring it back someday
     def render_html(self, template_path):
-        # We want to paint something above the fold before we update visibility
-        # (which is a bunch of expensive DOM operations that we need to defer), so
-        # copy the first few segments into a static section which we'll hide after.
+        # We want to show a subset of emoji on initial load, and paint something
+        # immediately, so duplicate a selection of "interesting" segments into a
+        # static above-the-fold section that doesn't require the browser to skip
+        # over ~1k hidden nodes to display something.
+        interesting_emoji = [chr(c) for c in range(0x231A, 0x26AC)]
         sections = {"facade": [], "full": []}
         # Keep track of all the scripts we've seen, and give them short DOM
         # identifiers. Technically, the first emoji (U+231A WATCH) is encountered
@@ -312,11 +315,13 @@ class UnicodePageData:
                 }
                 chart.rows.append(row)
                 chart.scripts.add(info.script)
+                if "Emoji" in chart.scripts and g in interesting_emoji:
+                    chart.above_fold = True
                 self.add_script(info.script)
 
-            if "Emoji" in chart.scripts and len(sections["facade"]) < 10:
-                sections["facade"].append(chart)
             sections["full"].append(chart)
+            if chart.above_fold:
+                sections["facade"].append(chart)
             if "DEBUG_SEGMENTS" in os.environ:
                 print("\t".join([str(len(seg.graphemes)), seg.name, ", ".join(chart.scripts)]), file=sys.stderr)
             if "DEBUG_SCRIPTS" in os.environ and len(chart.scripts) > 1:
