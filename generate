@@ -40,9 +40,9 @@ def github_abbrev(emoji):
     return "".join(c for c in emoji if c != "\ufe0f" and c != "\u200d")
 
 
-# BMP and SMP only for now
+# We're just going to do the BMP and the emoji portion of the SMP.
 def higher_plane(codepoint):
-    return (codepoint >> 16) > 1
+    return codepoint > 0x1FFFF or codepoint > 0xFFFF and codepoint < 0x1F000
 
 
 # Official looking hex
