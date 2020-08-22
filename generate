@@ -304,14 +304,13 @@ class UnicodePageData:
                     if n > 0x7F and n < 0xA0:
                         escape = ""
                 row = {
-                    "grapheme_repr": escape or g,
+                    "g_repr": escape or g,
+                    "g_info": info,
                     "is_escape": bool(escape),
-                    "name": info.name,
                     "size": 10 - int(10 * 23 / max(23, len(info.name))),
                     "cp_repr": cp_repr(g),
                     "cp_rows": int((len(g) + 1) / 2) if len(g) > 1 else 0,
                     "shortcodes": self.shortcodes[g],
-                    "category": info.category,
                 }
                 chart.rows.append(row)
                 chart.scripts.add(info.script)

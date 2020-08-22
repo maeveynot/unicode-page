@@ -43,11 +43,11 @@
           <table>
             {% for r in chart.rows %}
             <tr>
-              <td class="chr {{r.category}}">
+              <td class="chr {{r.g_info.category}}">
                 {% if r.is_escape %}
-                <span class="lit esc">{{r.grapheme_repr}}</span>
+                <span class="lit esc">{{r.g_repr}}</span>
                 {% else %}
-                {{r.grapheme_repr}}
+                {{r.g_repr}}
                 {% endif %}
               </td>
               <td class="lit cp c{{r.cp_rows}}">
@@ -62,7 +62,7 @@
                   {% endfor %}
                 </div>
                 {% endif %}
-                <div class="txt">{{r.name}}</div>
+                <div class="txt">{{r.g_info.name}}</div>
               </td>
               {# <td class="category">{{r.category}}</td> #}
             </tr>
