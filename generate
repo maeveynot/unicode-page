@@ -128,11 +128,11 @@ class SegmentChart:
 class UnicodePageData:
     def __init__(self):
         self.segments = []
-        self.pseudo_segments = {}
         self.graphemes = {}
         self.scripts = {}
         self.github_abbrevs = {}
         self.shortcodes = defaultdict(list)
+        self.seq_ignore = set((ZWJ, VS16))
 
         self.load_unicode_data()
         self.load_segments()
@@ -202,6 +202,8 @@ class UnicodePageData:
                 else:
                     print(f"warning: unknown grapheme in segment '{seg_name}': {cp_repr(g)}", file=sys.stderr)
                 seg.graphemes.append(g)
+                if seg_name in ("Emoji modifiers", "Emoji components"):
+                    self.seq_ignore.add(g)
 
     def load_scripts(self):
         for cp_str, script in text_fields("Scripts.txt"):
@@ -218,33 +220,42 @@ class UnicodePageData:
                         break
 
     def load_emoji(self, *paths):
-        fields = chain(text_fields("emoji-sequences.txt"), text_fields("emoji-zwj-sequences.txt"))
-        for cp_str, seq_type, name in fields:
+        pseudo_segments = {}
+        # Both files have the same structure
+        all_fields = chain(text_fields("emoji-sequences.txt"), text_fields("emoji-zwj-sequences.txt"))
+        for cp_str, seq_type, name in all_fields:
             if " " in cp_str:
-                # This is an emoji that's a sequence; we haven't seen any of these yet
+                # This is a sequence. It could be a simple VS16 sequence (adding an
+                # emoji-presentation counterpart of an existing simple codepoint) or it could
+                # be something more complex sequence (keycap, flag, etc); either way, it
+                # doesn't have a category in the data, so set to the same thing as basic emoji
                 codepoints = [int(i, 16) for i in cp_str.split()]
-                g = "".join(chr(c) for c in codepoints)
-                # Find/create a fake segment corresponding to the first codepoint's segment
-                root = chr(codepoints[0])
-                if len(codepoints) > 1 and root in self.graphemes:
-                    seg_name = f"{self.graphemes[root].segment_name}"
+                # Arbitrarily pick a candidate from the constituent code points. Just using
+                # the highest one gives acceptable results, except for tag sequences, because
+                # those characters are all the way up in plane 14, which we haven't loaded.
+                if seq_type in ("RGI_Emoji_Flag_Sequence", "RGI_Emoji_Tag_Sequence"):
+                    seg_name = "Flag symbols"
                 else:
-                    print(f"warning: unknown emoji {cp_repr(g)}", file=sys.stderr)
-                    seg_name = "Emoji"
-                if seg_name not in self.pseudo_segments:
-                    self.pseudo_segments[seg_name] = Segment(seg_name)
-                self.pseudo_segments[seg_name].graphemes.append(g)
-                # The category here is actually in the comment, but we've stripped comments
+                    base_cps = [c for c in codepoints if chr(c) not in self.seq_ignore]
+                    seg_name = self.graphemes[chr(max(base_cps))].segment_name
+                if seg_name not in pseudo_segments:
+                    pseudo_segments[seg_name] = Segment(seg_name)
+                g = "".join(chr(c) for c in codepoints)
+                pseudo_segments[seg_name].graphemes.append(g)
                 self.graphemes[g] = Grapheme(name, "So")
                 emoji = [g]
             else:
                 # This is either one single-code-point emoji or a contiguous run of them;
-                # we've already seen all of these
+                # we've already seen all of these, and all we need to do is change the
+                # script below.
                 emoji = [chr(cp) for cp in parse_cp_range(cp_str)]
+            # In either case, we set the emoji as this pseudo script; if it was a VS of
+            # basic emoji that we read previously, it's officially defined as Common, and
+            # if it's a complex sequence, it has no script.
             for g in emoji:
                 self.graphemes[g].script = "Emoji"
                 self.github_abbrevs[github_abbrev(g)] = g
-        self.segments.extend(self.pseudo_segments.values())
+        self.segments.extend(pseudo_segments.values())
 
     def load_github_shortcodes(self):
         for shortcode, url in json_dict("github-shortcodes.json").items():
