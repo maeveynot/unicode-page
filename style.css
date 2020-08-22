@@ -2,27 +2,89 @@ html {
   font: 12pt system-ui, "Open Sans", Roboto, "Fira Sans", Ubuntu, "Helvetica Neue", Cantarell, "Segoe UI", sans-serif;
   -webkit-text-size-adjust: none;
 }
-body {
-  display: flex;
-  max-width: 60em;
-  margin: auto;
+@media screen and (max-width: 840px) {
+  main {
+    font-size: 80%;
+  }
 }
+
+@media screen and (min-width: 641px) {
+  body {
+    max-width: 56em;
+    margin: auto;
+    padding: 0 10pt;
+    display: flex;
+  }
+  nav {
+    width: 14rem;
+    height: 100vh;
+    flex-shrink: 0;
+  }
+  /* nav container */
+  #nc {
+    padding-bottom: 1rem;
+    height: inherit;
+    width: inherit;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+  }
+  /* script toggles */
+  #st {
+    margin-top: 10pt;
+    flex-grow: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  main {
+    flex-grow: 1;
+    padding: 5pt;
+  }
+}
+
+@media screen and (max-width: 640px) {
+  body {
+    width: 100%;
+    display: block;
+    margin: 0;
+    padding: 0;
+  }
+  nav, #nc {
+    width: 100%;
+    height: auto;
+    position: static;
+  }
+  #nc {
+    padding-bottom: 0;
+  }
+  #st {
+    margin: 0;
+    padding: 5pt;
+  }
+  /* script toggle content */
+  #stc {
+    columns: 3;
+  }
+  #info {
+    display: none;
+  }
+  main {
+    margin-left: initial;
+    padding: 2.5pt;
+  }
+}
+
 nav {
-  font-size: 80%;
-  flex-basis: 18em;
+  font-size: 75%;
 }
-#st, .cred {
-  margin: 0.5em;
-  padding: 0.5em;
-}
-section {
-  padding: 6pt 0;
-}
-main {
-  flex-grow: 1;
-}
+/* script toggle header */
 #sth {
+  padding: 3pt;
+  margin: 2.5pt;
   font-weight: bold;
+}
+#stc {
+  padding: 0 5pt 5pt 5pt;
 }
 /* initially hidden in favor of #facade */
 #full {
@@ -30,38 +92,47 @@ main {
 }
 /* togglebox container */
 .tog {
-  margin: 6pt;
+  margin: 0;
+  padding: 2.5pt 0;
 }
+#info {
+  font-size: 75%;
+  margin-bottom: calc(10pt - 0.5625rem);
+}
+/* segment container */
 .seg {
-  margin-bottom: 16pt;
+  margin-bottom: 1em;
   display: none;
 }
+/* segment name heading */
 .snh {
   display: flex;
   align-items: center;
-  padding: 0 9pt 0 3pt;
+  padding: 0 1em 0 0.25em;
 }
 h1 {
   font-size: 125%;
   flex-grow: 1;
-  margin: 8pt;
+  margin: 0.75em;
 }
+/* segment scripts */
 .scr {
-  font-size: 0.667em;
+  font-size: 75%;
 }
 table {
-  border-spacing: 3pt;
+  border-spacing: 2.5pt;
   width: 100%;
 }
 tr {
-  height: 34pt;
+  height: 2.83em;
 }
 td {
-  padding: 0 6pt;
+  padding: 0 5pt;
 }
+/* grapheme */
 .chr {
   font-family: initial;
-  font-size: 2em;
+  font-size: 200%;
   text-align: center;
   min-width: 2em;
   overflow: hidden;
@@ -69,27 +140,35 @@ td {
 .esc {
   font-size: 1rem;
 }
+/* nonspacing marks and combining spacing marks can be heckin wide */
 .chr.Mn, .chr.Mc {
   max-width: 2rem;
 }
+/* literal (codepoint, escape, shortcode, etc) */
 .lit {
   font-family: "Operator Mono", Inconsolata, "Fira Mono", Menlo, "Source Code Pro", Consolas, "Lucida Console", Monaco, monospace;
 }
+/* codepoints */
 .cp {
   max-width: 7.5em;
   text-align: center;
 }
+/* grapheme name */
 .nm {
-  width: 75%;
+  width: 80%; /* just try to request a lot */
 }
+/* shortcodes */
 .sc {
   float: right;
-  font-size: 0.75rem;
+  font-size: 75%;
 }
+/* codepoint sizes (the number of rows we expect the codepoints to take
+ * up, given that we want to fit two on a line) */
 .c1 { font-size: 75%; }
 .c2 { font-size: 60%; }
 .c3 { font-size: 48%; }
 .c4 { font-size: 44%; }
+/* name sizes (handwaving this; larger is longer) */
 .n1 { font-size: 93%; }
 .n2 { font-size: 86%; }
 .n3 { font-size: 79%; }
@@ -104,34 +183,11 @@ td {
 }
 
 @media screen and (max-width: 640px) {
-  body {
-    max-width: 100%;
-    display: block;
-  }
-  nav {
-    max-width: 100%;
-  }
-  #st {
-    margin: 0;
-    padding: 1em;
-  }
-  #stc {
-    columns: 2;
-  }
-  .cred {
-    display: none;
-  }
   td {
-    padding: 0 3pt;
+    padding: 0 2.5pt;
   }
   h1 {
     font-size: 1rem;
-  }
-  .sc {
-    font-size: 8pt;
-  }
-  .nm {
-    max-width: 10em;
   }
   .c0 { font-size: 56%; }
   .c1 { font-size: 40%; }
@@ -140,6 +196,13 @@ td {
   .c4 { font-size: 22%; }
 }
 
+@media screen and (max-width: 480px) {
+  #stc {
+    columns: 2;
+  }
+}
+
+/* light color scheme (day mode) */
 @media screen {
   body {
     color: #131313;

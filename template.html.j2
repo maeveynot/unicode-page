@@ -11,6 +11,7 @@
   </head>
   <body>
     <nav>
+    <div id="nc">
       <details id="st">
         <summary id="sth">
           Scripts
@@ -26,10 +27,15 @@
           {% endfor %}
         </div>
       </details>
-      <p class="cred">
-        By <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
-        Check out our sister site, <a href="http://man-ascii.com">man-ascii.com</a>.
-      </p>
+      <div id="info">
+        <p>
+          <span class="lit">unicode.page</span> was written by
+          <a href="mailto:unicode-page@maeveandrews.com">Maeve Andrews</a>.
+          Check out our sister site,
+          <a href="http://man-ascii.com">man-ascii.com</a>.
+        </p>
+      </div>
+    </div>
     </nav>
     <main>
       {% for s, charts in sections.items() %}
