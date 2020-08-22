@@ -14,6 +14,27 @@ from itertools import chain
 from urllib.parse import urlparse
 
 
+# Some important code points for emoji sequences
+ZWJ = "\u200D"
+VS16 = "\uFE0F"
+
+# Things that appear (as single code points) in the segments list that we
+# don't want to load at all.
+IGNORE_CODEPOINTS = [
+    "<reserved>",
+    "<not a character>",
+]
+
+# Kinds of code points we can't reasonably display. Would be nice if we could
+# skip these at load time; currently this isn't used until render.
+IGNORE_CATEGORIES = [
+    "Mc",  # combining
+    "Cs",  # surrogate
+    "Co",  # private
+    "Cn",  # unassigned
+]
+
+
 # This is maybe not the most absolutely correct way to parse every UCD file
 # (it's... hard to say, looking at the docs), but it works well enough, and I
 # have to assume that *they* assume people are going to do it.
@@ -37,7 +58,7 @@ def json_dict(path):
 # points, rather than the longer ASCII representation used in the URIs, but
 # we're only using it to index a dict lookup so who really cares.
 def github_abbrev(emoji):
-    return "".join(c for c in emoji if c != "\ufe0f" and c != "\u200d")
+    return "".join(c for c in emoji if c not in (ZWJ, VS16))
 
 
 # We're just going to do the BMP and the emoji portion of the SMP.
@@ -80,23 +101,6 @@ def parse_cp_range(cp_str):
         return range(start, end + 1)
     else:
         return [int(cp_str, 16)]
-
-
-# Things that appear (as single code points) in the segments list that we
-# don't want to load at all.
-IGNORE_CODEPOINTS = [
-    "<reserved>",
-    "<not a character>",
-]
-
-# Kinds of code points we can't reasonably display. Would be nice if we could
-# skip these at load time; currently this isn't used until render.
-IGNORE_CATEGORIES = [
-    "Mc",  # combining
-    "Cs",  # surrogate
-    "Co",  # private
-    "Cn",  # unassigned
-]
 
 
 class Grapheme:
