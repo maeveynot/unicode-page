@@ -289,7 +289,7 @@ class UnicodePageData:
         # immediately, so duplicate a selection of "interesting" segments into a
         # static above-the-fold section that doesn't require the browser to skip
         # over ~1k hidden nodes to display something.
-        interesting_emoji = [chr(c) for c in range(0x231A, 0x26AC)]
+        interesting_emoji = [chr(c) for c in range(0x1F300, 0x1F3BD)]
         sections = {"facade": [], "full": []}
         # Keep track of all the scripts we've seen, and give them short DOM
         # identifiers. Technically, the first emoji (U+231A WATCH) is encountered
