@@ -1,29 +1,31 @@
 const initialScript = "sE";
 const initialToggle = document.getElementById(initialScript);
 const toggles = Array.from(document.getElementsByClassName("box"));
+const segments = Array.from(document.getElementsByClassName("seg"));
+const facade = document.getElementById("facade");
 
 const updateVisibility = target => {
   const visible = new Set(toggles.flatMap(box =>
     box.checked ? Array.from(document.querySelectorAll(".seg." + box.value)) : []
   ));
-  document.querySelectorAll(".seg").forEach(node => {
+  segments.forEach(node => {
     node.style.display = visible.has(node) ? "block" : "none";
   });
   if (initialToggle.indeterminate || target == initialToggle) {
     initialToggle.indeterminate = false;
-    document.getElementById("facade").style.display = "none";
+    facade.style.display = "none";
   }
 };
 
 document.getElementById("show-init").addEventListener("click", event => {
-  document.getElementById("facade").style.display = "block";
+  facade.style.display = "block";
   toggles.forEach(box => {
     box.checked = false;
     if (box.id == initialScript) {
       box.indeterminate = true;
     }
   });
-  document.querySelectorAll(".seg").forEach(node => {
+  segments.forEach(node => {
     node.style.display = "none";
   });
 });
