@@ -15,6 +15,14 @@ html {
     padding: 0 10pt;
     display: flex;
   }
+  #cover {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 10pt;
+    z-index: 1;
+  }
   nav {
     width: 14rem;
     height: 100vh;
@@ -38,7 +46,11 @@ html {
   }
   main {
     flex-grow: 1;
-    padding: 5pt;
+    padding: 10pt 5pt;
+  }
+  /* segment name heading */
+  .snh {
+    top: 10pt;
   }
 }
 
@@ -48,6 +60,9 @@ html {
     display: block;
     margin: 0;
     padding: 0;
+  }
+  #cover {
+    display: none;
   }
   nav, #nc {
     width: 100%;
@@ -70,7 +85,9 @@ html {
   }
   main {
     margin-left: initial;
-    padding: 2.5pt;
+  }
+  .snh {
+    top: 0;
   }
 }
 
@@ -101,19 +118,21 @@ nav {
 }
 /* segment container */
 .seg {
-  margin-bottom: 1em;
   display: none;
 }
-/* segment name heading */
+table {
+  margin: 5pt 0;
+}
 .snh {
   display: flex;
   align-items: center;
   padding: 0 1em 0 0.25em;
+  position: sticky; /* set an opaque background later */
 }
 h1 {
   font-size: 125%;
   flex-grow: 1;
-  margin: 0.75em;
+  margin: 0.5em;
 }
 /* segment scripts */
 .scr {
@@ -209,7 +228,13 @@ td {
     background: #fafafa;
   }
   #st {
-    background: #dadaff;
+    background: #e1e1ff;
+  }
+  #cover {
+    background: #ffffff;
+  }
+  .snh {
+    background: #f0e1ff;
   }
   .lit {
     color: #565656;
@@ -232,7 +257,13 @@ td {
     background: #252525;
   }
   #st {
-    background: #31314f;
+    background: #39394f;
+  }
+  #cover {
+    background: #252525;
+  }
+  .snh {
+    background: #44394f;
   }
   .lit {
     color: #a0a0a0;
