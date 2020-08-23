@@ -24,6 +24,11 @@ main {
 #sth {
   font-weight: bold;
 }
+/* initially hidden in favor of #facade */
+#full {
+  display: none;
+}
+/* togglebox container */
 .tog {
   margin: 6pt;
 }
