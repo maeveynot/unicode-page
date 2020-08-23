@@ -153,6 +153,13 @@ class UnicodePageData:
                 if not any(g in seg.graphemes for seg in self.segments):
                     print(f"warning: orphaned grapheme {cp_repr(g)}", file=sys.stderr)
 
+        if "script-stats" in DEBUG:
+            count = defaultdict(int)
+            for info in self.graphemes.values():
+                count[info.script] += 1
+            for script, n in count.items():
+                print(f"{n}\t{script}", file=sys.stderr)
+
     def load_unicode_data(self):
         # https://www.unicode.org/reports/tr44/#UnicodeData.txt
         for cp_str, name, cat, cc, bc, dt, dm, nt, nv, bm, v1name, c, um, lm, tm in text_fields("UnicodeData.txt"):
