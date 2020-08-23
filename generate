@@ -229,7 +229,7 @@ class UnicodePageData:
                     # This happens for the <foo, First>..<foo, Last> ranges
                     if "skips" in DEBUG:
                         print(f"debug: ignoring {cp_str} for script {script}", file=sys.stderr)
-                        break
+                    break
 
     def load_emoji(self, *paths):
         pseudo_segments = {}
