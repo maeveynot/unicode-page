@@ -14,6 +14,11 @@ from itertools import chain
 from urllib.parse import urlparse
 
 
+# You can put various values in here for more output (to stderr)
+DEBUG = os.environ.get("DEBUG", "").split(",")
+# If you really must, you can generate a very short page for quick QA and perf
+SHORT_OUTPUT = "IMPERIALIST_LEXICOGRAPHIC_CHAUVINISM" in os.environ
+
 # Some important code points for emoji sequences
 ZWJ = "\u200D"
 VS16 = "\uFE0F"
@@ -142,7 +147,7 @@ class UnicodePageData:
 
         # This check is obviously slow, but we want to be able to know if something
         # didn't end up in a segment and won't be rendered.
-        if "DEBUG" in os.environ:
+        if "orphans" in DEBUG:
             print("debug: checking for orphans...", file=sys.stderr)
             for g in self.graphemes.keys():
                 if not any(g in seg.graphemes for seg in self.segments):
@@ -215,7 +220,7 @@ class UnicodePageData:
                     self.graphemes[g].script = script.replace("_", " ")
                 else:
                     # This happens for the <foo, First>..<foo, Last> ranges
-                    if "DEBUG" in os.environ:
+                    if "skips" in DEBUG:
                         print(f"debug: ignoring {cp_str} for script {script}", file=sys.stderr)
                         break
 
@@ -267,7 +272,7 @@ class UnicodePageData:
                     self.shortcodes[self.github_abbrevs[a]].append(shortcode)
             except ValueError:
                 # Some of these are quite embarassing
-                if "DEBUG" in os.environ:
+                if "github" in DEBUG:
                     print(f"debug: ignoring {url}", file=sys.stderr)
 
     def add_script(self, s):
@@ -307,7 +312,7 @@ class UnicodePageData:
                     continue
                 if info.category in IGNORE_CATEGORIES:
                     continue
-                if "IMPERIALIST_LEXICOGRAPHIC_CHAUVINISM" in os.environ and info.script not in ("Common", "Emoji", "Latin"):
+                if SHORT_OUTPUT and info.script not in ("Common", "Emoji", "Latin"):
                     continue
                 escape = None
                 if len(g) == 1 and ord(g) < 0xFF:
@@ -336,10 +341,10 @@ class UnicodePageData:
             sections["full"].append(chart)
             if chart.above_fold:
                 sections["facade"].append(chart)
-            if "DEBUG_SEGMENTS" in os.environ:
-                print("\t".join([str(len(seg.graphemes)), seg.name, ", ".join(chart.scripts)]), file=sys.stderr)
-            if "DEBUG_SCRIPTS" in os.environ and len(chart.scripts) > 1:
-                print("\t".join(["-", seg.name, "-"]), file=sys.stderr)
+            if "segment-stats" in DEBUG:
+                print(f"{len(seg.graphemes)}\t{seg.name}\t{', '.join(chart.scripts)}", file=sys.stderr)
+            if "mixed-scripts" in DEBUG and len(chart.scripts) > 1:
+                print(f"------\t{seg.name} ({len(chart.rows)})", file=sys.stderr)
                 for g in seg.graphemes:
                     info = self.graphemes[g]
                     print("\t".join([cp_repr(g), info.script, info.name]), file=sys.stderr)
