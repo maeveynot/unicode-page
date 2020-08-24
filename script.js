@@ -1,5 +1,7 @@
 const initialScript = "sE";
+const wideQuery = window.matchMedia('(min-width: 621px)');
 const initialToggle = document.getElementById(initialScript);
+const details = document.getElementById("st");
 const toggles = Array.from(document.getElementsByClassName("box"));
 const segments = Array.from(document.getElementsByClassName("seg"));
 const facade = document.getElementById("facade");
@@ -42,9 +44,15 @@ toggles.forEach(box => {
   });
 });
 
+const updateDetails = event => {
+  details.open = wideQuery.matches;
+};
+
+window.addEventListener("orientationchange", event => {
+  window.addEventListener("resize", updateDetails, {once: true});
+});
+
 requestAnimationFrame(timestamp => {
   initialToggle.indeterminate = true;
-  if (getComputedStyle(document.body).display == "flex") {
-    document.getElementById("st").open = true;
-  }
+  updateDetails(null);
 });
